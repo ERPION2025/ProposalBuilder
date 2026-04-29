@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ERPion — Proposal Builder</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f7f8f9;--bg3:#f0f1f3;
+  --text:#1a1a1a;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --green:#1D9E75;--gl:#E1F5EE;--gd:#0F6E56;--gdp:#085041;
+  --blue:#E6F1FB;--bt:#0C447C;
+  --amber:#FAEEDA;--at:#633806;
+  --red:#FAECE7;--rt:#712B13;
+  --purple:#EEEDFE;--pt:#3C3489;
+  --r:8px;--rl:12px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+  --sh2:0 4px 16px rgba(0,0,0,.1);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── APP SHELL ── */
+.app-bar{background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:52px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.ab-logo{width:28px;height:28px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
+.ab-name{font-size:15px;font-weight:600;margin-left:10px;margin-right:24px}
+.ab-tabs{display:flex;gap:2px;flex:1}
+.ab-tab{padding:6px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s;border:none;background:none}
+.ab-tab:hover{background:var(--bg2);color:var(--text)}
+.ab-tab.active{background:var(--gl);color:var(--gd)}
+.ab-tab.admin-tab{color:var(--at)}
+.ab-tab.admin-tab.active{background:var(--amber);color:var(--at)}
+.ab-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.ab-status{font-size:11px;padding:3px 10px;border-radius:20px}
+.st-ok{background:var(--gl);color:var(--gdp)}.st-no{background:var(--bg3);color:var(--text2)}
+
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.sb-sec{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:12px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{background:var(--bg2);color:var(--text)}
+.nav-item.active{background:var(--gl);color:var(--gd);font-weight:500;border-left-color:var(--green)}
+.nav-item.done{color:var(--gd)}
+.nav-item.admin-nav.active{background:var(--amber);color:var(--at);border-left-color:#BA7517}
+.nav-num{width:20px;height:20px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.nav-item.active .nav-num{background:var(--green);color:#fff}
+.nav-item.done .nav-num{background:var(--gl);color:var(--gd)}
+.nav-item.admin-nav.active .nav-num{background:#BA7517;color:#fff}
+.sb-foot{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+.sb-foot span{color:var(--gd);font-weight:500}
+
+/* ── MAIN CONTENT ── */
+.main{padding:28px 32px;max-width:940px}
+.ph{margin-bottom:22px}.ph h2{font-size:20px;font-weight:600;margin-bottom:4px}.ph p{font-size:13px;color:var(--text2)}
+.ph-admin{display:flex;align-items:center;gap:10px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.ph-admin h2{font-size:20px;font-weight:600}
+.ph-admin p{font-size:13px;color:var(--text2);margin-top:2px}
+
+/* ── CARDS ── */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:20px;margin-bottom:14px;box-shadow:var(--sh)}
+.card-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;text-transform:none;letter-spacing:0;display:inline-block}
+.bg{background:var(--gl);color:var(--gdp)}.bb{background:var(--blue);color:var(--bt)}.ba{background:var(--amber);color:var(--at)}.br{background:var(--red);color:var(--rt)}.bp{background:var(--purple);color:var(--pt)}
+
+/* ── FORMS ── */
+.fg{display:grid;gap:12px;margin-bottom:12px}
+.fg2{grid-template-columns:1fr 1fr}.fg3{grid-template-columns:1fr 1fr 1fr}.fg4{grid-template-columns:1fr 1fr 1fr 1fr}.fg1{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:500;color:var(--text2)}
+input[type=text],input[type=email],input[type=number],input[type=password],select,textarea{width:100%;padding:8px 11px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+textarea{resize:vertical;min-height:70px}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+input[readonly]{background:var(--bg2);color:var(--text2);cursor:default}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:var(--r);font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;font-weight:500}
+.btnp{background:var(--green);color:#fff}.btnp:hover{background:var(--gd)}
+.btns{background:var(--bg);border-color:var(--border2);color:var(--text2)}.btns:hover{background:var(--bg2);color:var(--text)}
+.btno{background:none;border-color:var(--green);color:var(--gd)}.btno:hover{background:var(--gl)}
+.btnd{background:none;border-color:#E24B4A;color:#A32D2D}.btnd:hover{background:#FCEBEB}
+.btna{background:none;border-color:#BA7517;color:var(--at)}.btna:hover{background:var(--amber)}
+.btnsm{padding:5px 11px;font-size:12px}.btnlg{padding:11px 24px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.navrow{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ── PLATFORM GRID ── */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pcard{border:1.5px solid var(--border);border-radius:var(--rl);padding:14px 12px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg)}
+.pcard:hover{border-color:var(--green)}.pcard.sel{border-color:var(--green);background:var(--gl);box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+.pi{font-size:24px;display:block;margin-bottom:6px}.pn{font-size:13px;font-weight:600}.pd{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* ── MODULES ── */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.mchip{border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:8px;background:var(--bg)}
+.mchip:hover{border-color:var(--green)}.mchip.sel{border-color:var(--green);background:var(--gl)}
+.mchip input[type=checkbox]{width:14px;height:14px;accent-color:var(--green);flex-shrink:0;margin-top:2px;cursor:pointer}
+.mn{font-size:12px;font-weight:500}.mm{font-size:10px;color:var(--gd);margin-top:2px}.mr{font-size:10px;color:var(--text2);margin-top:1px}
+.cdot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;vertical-align:middle}
+.dh{background:#D85A30}.dm{background:#BA7517}.dl{background:var(--green)}
+
+/* ── EFFORT BOX ── */
+.ebox{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-top:14px}
+.ebox h4{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.met{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
+.ml{font-size:10px;color:var(--text2);margin-bottom:2px}.mv{font-size:20px;font-weight:600}.mu{font-size:10px;color:var(--text2);font-weight:400}
+.rtbl{width:100%;border-collapse:collapse}
+.rtbl th{font-size:10px;font-weight:600;color:var(--text2);text-align:left;padding:5px 8px;border-bottom:1px solid var(--border)}
+.rtbl td{font-size:12px;padding:7px 8px;border-bottom:1px solid var(--border)}
+.rtbl tr:last-child td{border-bottom:none}
+.bw{height:6px;background:var(--bg3);border-radius:3px;display:inline-block;width:88px;vertical-align:middle;margin-left:6px;overflow:hidden}
+.bf{height:100%;background:var(--green);border-radius:3px}
+
+/* ── RATE LEGEND ── */
+.rlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin-bottom:12px}
+.rlcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;display:flex;justify-content:space-between;align-items:center}
+.rln{font-size:12px;font-weight:500}.rlr{font-size:11px;color:var(--gd);font-weight:600}.rls{font-size:10px;color:var(--text2)}
+
+/* ── RESOURCE TABLE ── */
+.rwrap{border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.rhead{background:var(--bg2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.rhead h4{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px}
+.restbl{width:100%;border-collapse:collapse;background:var(--bg)}
+.restbl th{font-size:10px;font-weight:600;color:var(--text2);text-align:left;padding:8px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.restbl td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+.restbl tr:last-child td{border-bottom:none}
+.restbl td input,.restbl td select{font-size:12px;padding:5px 7px}
+.stag{font-size:9px;font-weight:600;padding:2px 6px;border-radius:20px;margin-left:4px;vertical-align:middle}
+.sauto{background:var(--gl);color:var(--gdp)}.sman{background:var(--blue);color:var(--bt)}
+.rmbtn{width:24px;height:24px;border-radius:50%;border:1px solid var(--border2);background:none;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:14px;margin:auto;transition:all .15s}
+.rmbtn:hover{border-color:#E24B4A;color:#E24B4A;background:#FCEBEB}
+.addbtn{width:100%;padding:9px 14px;background:none;border:none;border-top:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:500;color:var(--gd);text-align:left;display:block;transition:background .15s}
+.addbtn:hover{background:var(--bg2)}
+
+/* ── DUAL COST TABLE ── */
+.hbox{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:14px;margin-bottom:14px}
+.hbox h4{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.htbl{width:100%;border-collapse:collapse}
+.htbl th{font-size:10px;font-weight:600;color:var(--text2);text-align:left;padding:5px 8px;border-bottom:1px solid var(--border)}
+.htbl td{font-size:12px;padding:7px 8px;border-bottom:1px solid var(--border)}
+.htbl tr:last-child td{border-bottom:none}
+.htbl tfoot td{font-weight:600;background:var(--bg);border-top:1.5px solid var(--border2);padding:9px 8px}
+
+/* ── PRICING ── */
+.playout{display:grid;grid-template-columns:1fr 285px;gap:14px;margin-top:14px;align-items:start}
+.occard{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+.occard h4{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.crow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.crow label{font-size:12px;color:var(--text2);flex:1}.crow input{width:120px;flex-shrink:0}
+.psum{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh)}
+.psum-hd{background:var(--green);padding:12px 14px;color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+.psum-bd{padding:12px 14px}
+.pr{display:flex;justify-content:space-between;padding:5px 0;font-size:12px}
+.pr .pl{color:var(--text2)}.pr .pv{font-weight:500}
+.pdiv{height:1px;background:var(--border);margin:6px 0}
+.ptot{display:flex;justify-content:space-between;padding:8px 0 2px}
+.ptot .pl{font-size:12px;font-weight:600}.ptot .pv{font-size:16px;font-weight:700;color:var(--green)}
+
+/* ── AI INTEL ── */
+.intel{background:linear-gradient(135deg,#f0faf5,#e8f4fe);border:1px solid var(--green);border-radius:var(--rl);padding:16px;margin-top:14px}
+.intel h4{font-size:12px;font-weight:600;color:var(--gd);margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.icard{background:#fff;border:1px solid rgba(29,158,117,.2);border-radius:var(--r);padding:12px}
+.icard h5{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.itag{display:inline-block;background:var(--gl);color:var(--gdp);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:500;margin:2px 3px 2px 0;cursor:pointer;transition:all .15s;border:1px solid transparent}
+.itag:hover{border-color:var(--green)}.itag.applied{background:var(--green);color:#fff}
+.iplat{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid rgba(29,158,117,.3);border-radius:var(--r);padding:6px 10px;margin:3px;cursor:pointer;font-size:12px;transition:all .15s}
+.iplat:hover,.iplat.applied{border-color:var(--green);background:var(--gl)}
+.iinsight{font-size:12px;color:var(--text2);line-height:1.6;padding:6px 0}
+.applybtn{background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:7px 14px;font-size:12px;cursor:pointer;font-weight:500}
+.applybtn:hover{background:var(--gd)}
+
+/* ── TONE & PROPOSAL ── */
+.tgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.tcard{border:1.5px solid var(--border);border-radius:var(--rl);padding:12px;cursor:pointer;text-align:center;transition:all .15s}
+.tcard:hover{border-color:var(--green)}.tcard.sel{border-color:var(--green);background:var(--gl)}
+.tl{font-size:13px;font-weight:600}.td{font-size:11px;color:var(--text2);margin-top:3px}
+.propout{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:20px;min-height:200px;position:relative}
+.propout pre{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.75}
+.loading{position:absolute;inset:0;background:var(--bg);border-radius:var(--rl);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.spin{width:32px;height:32px;border:2.5px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ltxt{font-size:13px;color:var(--text2)}.lsub{font-size:11px;color:var(--text3)}
+.oacts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.sbar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.sc{background:var(--bg2);border-radius:var(--r);padding:10px 12px;border:1px solid var(--border)}
+.sl{font-size:10px;color:var(--text2);margin-bottom:4px}.sv{font-size:15px;font-weight:600}.su{font-size:10px;color:var(--text2);font-weight:400}
+.apibox{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.apibox h4{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.apir{display:flex;gap:8px}.apir input{flex:1;font-family:monospace;font-size:12px}
+.apist{font-size:11px;margin-top:6px}.aok{color:var(--gd)}.aerr{color:#A32D2D}
+.notice{background:var(--gl);border-left:3px solid var(--green);padding:10px 14px;border-radius:0 var(--r) var(--r) 0;font-size:12px;color:var(--gdp);margin-bottom:14px;line-height:1.5}
+.tip{font-size:11px;color:var(--text2);background:var(--bg2);padding:8px 12px;border-radius:var(--r);margin-bottom:12px;border:1px solid var(--border)}
+
+/* ── ADMIN PANEL ── */
+.admin-tabs{display:flex;gap:2px;margin-bottom:20px;background:var(--bg3);border-radius:var(--rl);padding:4px}
+.at{flex:1;padding:8px 6px;text-align:center;font-size:12px;font-weight:500;color:var(--text2);border-radius:var(--r);cursor:pointer;transition:all .15s;border:none;background:none}
+.at.active{background:var(--bg);color:var(--text);box-shadow:var(--sh)}
+.at-icon{display:block;font-size:16px;margin-bottom:2px}
+.admin-tbl{width:100%;border-collapse:collapse}
+.admin-tbl th{font-size:11px;font-weight:600;color:var(--text2);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.admin-tbl td{font-size:13px;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.admin-tbl tr:last-child td{border-bottom:none}
+.admin-tbl tr:hover td{background:var(--bg2)}
+.admin-tbl td input,.admin-tbl td select{font-size:12px;padding:5px 8px}
+.action-btns{display:flex;gap:6px;justify-content:flex-end}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg);border-radius:var(--rl);padding:24px;width:100%;max-width:560px;box-shadow:var(--sh2);max-height:85vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--r)}
+.modal-close:hover{background:var(--bg2)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.inline-edit{background:none;border:none;font-size:13px;padding:4px 6px;border-radius:var(--r);cursor:pointer;color:var(--bt);font-weight:500}
+.inline-edit:hover{background:var(--blue)}
+
+/* Activity log */
+.log-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.log-item:last-child{border-bottom:none}
+.log-time{color:var(--text3);flex-shrink:0;min-width:100px}
+.log-msg{color:var(--text2)}
+.log-badge{font-size:9px;font-weight:600;padding:1px 6px;border-radius:20px;flex-shrink:0}
+
+/* AI feed panel */
+.feed-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+.feed-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.feed-meta{font-size:11px;color:var(--text3);margin-bottom:8px}
+.feed-body{font-size:12px;color:var(--text2);line-height:1.6}
+.feed-actions{margin-top:10px;display:flex;gap:8px}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:16px;box-shadow:var(--sh)}
+.stat-val{font-size:28px;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:12px;color:var(--text2);margin-top:4px}
+.stat-sub{font-size:11px;color:var(--gd);margin-top:2px}
+
+/* Connection status dots */
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+.dot-on{background:#1D9E75}.dot-off{background:#e5e7eb}.dot-pulse{background:#1D9E75;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Role chips for admin */
+.role-tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:3px 8px;font-size:11px;margin:2px;cursor:pointer}
+.role-tag:hover{border-color:#E24B4A;color:#A32D2D}
+.role-tag .x{color:var(--text3);font-size:12px}
+
+/* ── AI CONFIG PANEL ── */
+.ai-config-panel{background:linear-gradient(135deg,#f0f0ff 0%,#f0faf8 100%);border:1.5px solid #7F77DD;border-radius:var(--rl);padding:20px;margin-top:4px}
+.ai-config-panel .acp-title{font-size:13px;font-weight:600;color:#3C3489;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.ai-config-panel .acp-sub{font-size:12px;color:var(--text2);margin-bottom:16px}
+.ai-config-section{margin-bottom:18px}
+.ai-config-section h5{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.cap-chip{border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:8px;background:var(--bg)}
+.cap-chip:hover{border-color:#7F77DD}
+.cap-chip.sel{border-color:#7F77DD;background:var(--purple)}
+.cap-chip input[type=checkbox]{width:14px;height:14px;accent-color:#534AB7;flex-shrink:0;margin-top:2px;cursor:pointer}
+.cap-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.cap-name{font-size:12px;font-weight:500;color:var(--text)}
+.cap-desc{font-size:10px;color:var(--text2);margin-top:1px}
+.tool-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tool-tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;cursor:pointer;transition:all .15s}
+.tool-tag:hover{border-color:#7F77DD}
+.tool-tag.sel{background:var(--purple);border-color:#7F77DD;color:#3C3489;font-weight:500}
+.ai-summary-box{background:#fff;border:1px solid rgba(127,119,221,.3);border-radius:var(--r);padding:12px;margin-top:12px}
+.ai-summary-box h5{font-size:11px;font-weight:600;color:#3C3489;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.ai-sum-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border)}
+.ai-sum-row:last-child{border-bottom:none}
+.ai-sum-row .asl{color:var(--text2)}.ai-sum-row .asv{color:var(--text);font-weight:500;text-align:right;max-width:60%}
+@media(max-width:720px){.cap-grid{grid-template-columns:1fr 1fr}}
+
+/* ── COMPANY/SIGNING FIELDS ── */
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px}
+.sig-party{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+.sig-party h4{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* ── PROPOSAL DOCUMENT (HTML renderer) ── */
+.pdoc{font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.65;color:#111;background:#fff}
+.pdoc-cover{padding:56px 60px 36px;border-bottom:3px solid #1D9E75}
+.pdoc-logo-bar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:44px}
+.pdoc-logo-name{font-size:20pt;font-weight:700;color:#1D9E75}
+.pdoc-logo-tag{font-size:8.5pt;color:#6b7280;margin-top:3px}
+.pdoc-ref{font-size:8.5pt;color:#6b7280;text-align:right}
+.pdoc-label{font-size:8.5pt;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+.pdoc-client{font-size:24pt;font-weight:700;color:#1a1a1a;line-height:1.2;margin-bottom:6px}
+.pdoc-subtitle{font-size:12pt;color:#1D9E75;font-weight:600;margin-bottom:28px}
+.pdoc-meta{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:20px}
+.pdoc-mc{padding:9px 14px;border-bottom:1px solid #e5e7eb;border-right:1px solid #e5e7eb}
+.pdoc-mc:nth-child(even){border-right:none}
+.pdoc-mc:nth-last-child(-n+2){border-bottom:none}
+.pdoc-ml{font-size:8pt;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
+.pdoc-mv{font-size:10pt;font-weight:600}
+.pdoc-confid{background:#FAEEDA;border:1px solid #d97706;border-radius:6px;padding:7px 12px;font-size:8pt;color:#633806;text-align:center;margin-top:16px}
+.pdoc-body{padding:36px 60px}
+.pdoc-sec{margin-bottom:24px}
+.pdoc-h1{font-size:14pt;font-weight:700;color:#1D9E75;border-bottom:2px solid #E1F5EE;padding-bottom:5px;margin-bottom:12px}
+.pdoc-h2{font-size:11pt;font-weight:700;margin-bottom:8px;margin-top:12px;color:#1a1a1a}
+.pdoc-p{font-size:10.5pt;margin-bottom:9px;text-align:justify}
+.pdoc-tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:10pt}
+.pdoc-tbl th{background:#1D9E75;color:#fff;padding:7px 10px;text-align:left;font-size:9pt;font-weight:600}
+.pdoc-tbl td{padding:7px 10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+.pdoc-tbl tr:nth-child(even) td{background:#f7f8f9}
+.pdoc-tbl tfoot td{background:#E1F5EE;font-weight:700;border-top:2px solid #1D9E75;color:#085041}
+.pdoc-tbl .nr{text-align:right}
+.pdoc-hl{background:#E1F5EE;border-left:4px solid #1D9E75;padding:9px 14px;margin:10px 0;border-radius:0 6px 6px 0;font-size:10pt}
+/* T&C */
+.pdoc-tnc{padding:36px 60px;border-top:2px solid #e5e7eb}
+.pdoc-tnc-h{font-size:14pt;font-weight:700;color:#1D9E75;border-bottom:2px solid #E1F5EE;padding-bottom:5px;margin-bottom:20px}
+.pdoc-tnc-sec{margin-bottom:14px}
+.pdoc-tnc-t{font-size:10.5pt;font-weight:700;color:#1a1a1a;margin-bottom:5px}
+.pdoc-tnc-b{font-size:9.5pt;color:#374151;line-height:1.65}
+.pdoc-tnc-b ol,.pdoc-tnc-b ul{padding-left:16px;margin:3px 0}
+.pdoc-tnc-b li{margin-bottom:2px}
+/* Signing */
+.pdoc-sign{padding:36px 60px;border-top:2px solid #e5e7eb}
+.pdoc-sign-h{font-size:14pt;font-weight:700;color:#1D9E75;border-bottom:2px solid #E1F5EE;padding-bottom:5px;margin-bottom:20px}
+.pdoc-sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.pdoc-sign-blk{border:1px solid #e5e7eb;border-radius:8px;padding:18px}
+.pdoc-sign-co{font-size:12pt;font-weight:700;color:#1D9E75;margin-bottom:2px}
+.pdoc-sign-role{font-size:9.5pt;color:#6b7280;margin-bottom:14px}
+.pdoc-sign-row{margin-bottom:12px}
+.pdoc-sign-lbl{font-size:8.5pt;color:#6b7280;margin-bottom:2px}
+.pdoc-sign-val{border-bottom:1px solid #9ca3af;min-height:22px;padding-bottom:2px;font-size:10pt}
+.pdoc-sign-warn{font-size:8pt;color:#6b7280;text-align:center;margin-top:20px;font-style:italic}
+.pdoc-foot{text-align:center;padding:16px 60px;border-top:1px solid #e5e7eb;font-size:8pt;color:#9ca3af}
+/* Viewer */
+.doc-viewer{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:flex;flex-direction:column}
+.doc-toolbar{background:#111;color:#fff;display:flex;align-items:center;gap:10px;padding:10px 20px;flex-shrink:0}
+.doc-toolbar-title{font-size:13px;font-weight:500;flex:1}
+.doc-scroll{flex:1;overflow-y:auto;background:#525659;padding:20px}
+.doc-page{background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.4);margin:0 auto 0;max-width:820px}
+
+@media print{
+  .doc-viewer{position:static!important;background:none!important}
+  .doc-toolbar,.app-bar,.sidebar,.navrow,.oacts,.apibox,.btn{display:none!important}
+  .doc-scroll{overflow:visible!important;background:none!important;padding:0!important}
+  .doc-page{box-shadow:none!important;max-width:100%!important}
+  .pdoc-sec,.pdoc-tnc-sec,.pdoc-sign-blk{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- APP BAR -->
+<div class="app-bar">
+  <div class="ab-logo">E</div>
+  <div class="ab-name">ERPion</div>
+  <div class="ab-tabs">
+    <button class="ab-tab active" id="tab-proposal" onclick="switchMode('proposal')">📋 Proposal Builder</button>
+    <button class="ab-tab admin-tab" id="tab-admin" onclick="switchMode('admin')">⚙️ Admin Panel</button>
+  </div>
+  <div class="ab-right">
+    <div class="ab-status" id="apiStatusBar"><span class="dot dot-off"></span>No API key</div>
+    <div style="font-size:11px;color:var(--text3)" id="lastSaved"></div>
+  </div>
+</div>
+
+<!-- PROPOSAL MODE -->
+<div id="proposalMode">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sb-sec">Proposal steps</div>
+      <div id="navItems"></div>
+      <div style="flex:1"></div>
+      <div class="sb-foot">Built by <span>ERPion Technologies</span></div>
+    </aside>
+    <main class="main" id="mainContent"></main>
+  </div>
+</div>
+
+<!-- ADMIN MODE -->
+<div id="adminMode" style="display:none">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sb-sec">Admin sections</div>
+      <div id="adminNav"></div>
+      <div style="flex:1"></div>
+      <div class="sb-foot">ERPion Admin <span>v3.0</span></div>
+    </aside>
+    <main class="main" id="adminContent"></main>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<!-- PROPOSAL DOCUMENT VIEWER -->
+<div id="docViewerMount" style="display:none"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   MASTER DATA — loaded from localStorage or defaults
+═══════════════════════════════════════════════════════════ */
+
+const DEFAULT_RATE_CARD = {
+  'Senior Developer':            {minCTC:100000,maxCTC:100000,billable:0.80,overhead:1.30},
+  'Junior Developer':            {minCTC:60000, maxCTC:60000, billable:0.75,overhead:1.30},
+  'Functional Consultant':       {minCTC:60000, maxCTC:80000, billable:0.80,overhead:1.25},
+  'Techno-Functional Consultant':{minCTC:80000, maxCTC:100000,billable:0.80,overhead:1.25},
+  'QA Engineer':                 {minCTC:25000, maxCTC:40000, billable:0.80,overhead:1.25},
+  'Project Manager':             {minCTC:120000,maxCTC:120000,billable:0.60,overhead:1.40},
+};
+
+const DEFAULT_PLATFORMS = [
+  {id:'erpnext',     name:'ERPNext',          icon:'🔧',desc:'Open source ERP',       active:true},
+  {id:'odoo',        name:'Odoo',             icon:'🟣',desc:'Modular ERP suite',     active:true},
+  {id:'zoho',        name:'ZOHO Suite',       icon:'🔵',desc:'Cloud business apps',   active:true},
+  {id:'unicommerce', name:'Unicommerce',      icon:'🛒',desc:'Multi-channel commerce',active:true},
+  {id:'ai',          name:'AI-Based System',  icon:'🤖',desc:'Custom AI workflows',   active:true},
+  {id:'custom',      name:'Custom Build',     icon:'⚙️',desc:'Bespoke software',      active:true},
+];
+
+const DEFAULT_MODULES = {
+  erpnext:['Accounting','Purchase','Sales','Inventory','HR','Payroll','CRM','Manufacturing','Projects','Support','E-commerce','Analytics'],
+  odoo:['Sales','Purchase','Inventory','Accounting','HR','Payroll','Manufacturing','CRM','Website','E-commerce','Marketing','Projects','Helpdesk','Field Service'],
+  zoho:['Zoho Books','Zoho CRM','Zoho Inventory','Zoho People','Zoho Analytics','Zoho Campaigns','Zoho Desk','Zoho Projects','Zoho Sign','Zoho Flow'],
+  unicommerce:['Order Management','Inventory','Warehouse Mgmt','Marketplace Integration','Shipping','Returns','Analytics','B2B Portal'],
+  ai:['Data Pipeline','Predictive Analytics','Document AI','Chatbot','Voice AI','Demand Forecasting','Anomaly Detection','Recommendation Engine'],
+  custom:['Custom Modules','API Integrations','Mobile App','Web Portal','Reporting','Automation','Notifications','Admin Dashboard'],
+};
+
+const DEFAULT_MODULE_EFFORT = {
+  'Accounting':              {h:120,cx:'high',  r:{'Techno-Functional Consultant':45,'Senior Developer':55,'QA Engineer':20}},
+  'Purchase':                {h:80, cx:'medium',r:{'Functional Consultant':30,'Junior Developer':35,'QA Engineer':15}},
+  'Sales':                   {h:80, cx:'medium',r:{'Functional Consultant':30,'Junior Developer':35,'QA Engineer':15}},
+  'Inventory':               {h:90, cx:'medium',r:{'Techno-Functional Consultant':30,'Senior Developer':45,'QA Engineer':15}},
+  'HR':                      {h:70, cx:'medium',r:{'Functional Consultant':30,'Junior Developer':30,'QA Engineer':10}},
+  'Payroll':                 {h:100,cx:'high',  r:{'Techno-Functional Consultant':40,'Senior Developer':45,'QA Engineer':15}},
+  'CRM':                     {h:85, cx:'medium',r:{'Techno-Functional Consultant':30,'Senior Developer':40,'QA Engineer':15}},
+  'Manufacturing':           {h:140,cx:'high',  r:{'Techno-Functional Consultant':50,'Senior Developer':70,'QA Engineer':20}},
+  'Projects':                {h:75, cx:'medium',r:{'Functional Consultant':25,'Senior Developer':40,'QA Engineer':10}},
+  'Support':                 {h:60, cx:'low',   r:{'Functional Consultant':20,'Junior Developer':30,'QA Engineer':10}},
+  'E-commerce':              {h:130,cx:'high',  r:{'Senior Developer':70,'Junior Developer':40,'QA Engineer':20}},
+  'Analytics':               {h:95, cx:'high',  r:{'Senior Developer':55,'Junior Developer':25,'QA Engineer':15}},
+  'Website':                 {h:100,cx:'medium',r:{'Senior Developer':55,'Junior Developer':35,'QA Engineer':10}},
+  'Marketing':               {h:65, cx:'low',   r:{'Functional Consultant':20,'Junior Developer':35,'QA Engineer':10}},
+  'Helpdesk':                {h:70, cx:'medium',r:{'Functional Consultant':25,'Junior Developer':35,'QA Engineer':10}},
+  'Field Service':           {h:95, cx:'high',  r:{'Techno-Functional Consultant':35,'Senior Developer':45,'QA Engineer':15}},
+  'Zoho Books':              {h:110,cx:'high',  r:{'Techno-Functional Consultant':40,'Senior Developer':55,'QA Engineer':15}},
+  'Zoho CRM':                {h:80, cx:'medium',r:{'Functional Consultant':30,'Junior Developer':40,'QA Engineer':10}},
+  'Zoho Inventory':          {h:85, cx:'medium',r:{'Functional Consultant':30,'Senior Developer':45,'QA Engineer':10}},
+  'Zoho People':             {h:70, cx:'medium',r:{'Functional Consultant':25,'Junior Developer':35,'QA Engineer':10}},
+  'Zoho Analytics':          {h:90, cx:'high',  r:{'Senior Developer':50,'Junior Developer':30,'QA Engineer':10}},
+  'Zoho Campaigns':          {h:55, cx:'low',   r:{'Functional Consultant':20,'Junior Developer':25,'QA Engineer':10}},
+  'Zoho Desk':               {h:65, cx:'low',   r:{'Functional Consultant':25,'Junior Developer':30,'QA Engineer':10}},
+  'Zoho Projects':           {h:70, cx:'medium',r:{'Functional Consultant':25,'Junior Developer':35,'QA Engineer':10}},
+  'Zoho Sign':               {h:40, cx:'low',   r:{'Junior Developer':28,'QA Engineer':12}},
+  'Zoho Flow':               {h:60, cx:'medium',r:{'Senior Developer':40,'QA Engineer':20}},
+  'Order Management':        {h:100,cx:'high',  r:{'Techno-Functional Consultant':35,'Senior Developer':50,'QA Engineer':15}},
+  'Warehouse Mgmt':          {h:120,cx:'high',  r:{'Techno-Functional Consultant':40,'Senior Developer':60,'QA Engineer':20}},
+  'Marketplace Integration': {h:110,cx:'high',  r:{'Senior Developer':70,'Functional Consultant':30,'QA Engineer':10}},
+  'Shipping':                {h:75, cx:'medium',r:{'Senior Developer':50,'Functional Consultant':15,'QA Engineer':10}},
+  'Returns':                 {h:60, cx:'medium',r:{'Senior Developer':40,'Functional Consultant':10,'QA Engineer':10}},
+  'B2B Portal':              {h:115,cx:'high',  r:{'Senior Developer':60,'Junior Developer':40,'QA Engineer':15}},
+  'Data Pipeline':           {h:130,cx:'high',  r:{'Senior Developer':80,'Junior Developer':40,'QA Engineer':10}},
+  'Predictive Analytics':    {h:150,cx:'high',  r:{'Senior Developer':90,'Junior Developer':45,'QA Engineer':15}},
+  'Document AI':             {h:120,cx:'high',  r:{'Senior Developer':75,'Junior Developer':35,'QA Engineer':10}},
+  'Chatbot':                 {h:90, cx:'medium',r:{'Senior Developer':55,'Junior Developer':25,'QA Engineer':10}},
+  'Voice AI':                {h:140,cx:'high',  r:{'Senior Developer':80,'Junior Developer':45,'QA Engineer':15}},
+  'Demand Forecasting':      {h:130,cx:'high',  r:{'Senior Developer':80,'Junior Developer':40,'QA Engineer':10}},
+  'Anomaly Detection':       {h:110,cx:'high',  r:{'Senior Developer':70,'Junior Developer':30,'QA Engineer':10}},
+  'Recommendation Engine':   {h:120,cx:'high',  r:{'Senior Developer':75,'Junior Developer':35,'QA Engineer':10}},
+  'Custom Modules':          {h:160,cx:'high',  r:{'Senior Developer':80,'Junior Developer':50,'QA Engineer':30}},
+  'API Integrations':        {h:100,cx:'high',  r:{'Senior Developer':70,'Functional Consultant':20,'QA Engineer':10}},
+  'Mobile App':              {h:180,cx:'high',  r:{'Senior Developer':100,'Junior Developer':60,'QA Engineer':20}},
+  'Web Portal':              {h:140,cx:'high',  r:{'Senior Developer':75,'Junior Developer':50,'QA Engineer':15}},
+  'Reporting':               {h:70, cx:'medium',r:{'Senior Developer':40,'Junior Developer':20,'QA Engineer':10}},
+  'Automation':              {h:85, cx:'medium',r:{'Senior Developer':55,'Functional Consultant':20,'QA Engineer':10}},
+  'Notifications':           {h:45, cx:'low',   r:{'Junior Developer':35,'QA Engineer':10}},
+  'Admin Dashboard':         {h:90, cx:'medium',r:{'Senior Developer':50,'Junior Developer':30,'QA Engineer':10}},
+};
+
+/* ═══ LOAD / SAVE MASTERS from localStorage ═══ */
+function loadMasters() {
+  try {
+    const rc = localStorage.getItem('erpion_ratecard');
+    const pl = localStorage.getItem('erpion_platforms');
+    const pm = localStorage.getItem('erpion_platformmods');
+    const me = localStorage.getItem('erpion_moduleeffort');
+    return {
+      RATE_CARD: rc ? JSON.parse(rc) : JSON.parse(JSON.stringify(DEFAULT_RATE_CARD)),
+      PLATFORMS: pl ? JSON.parse(pl) : JSON.parse(JSON.stringify(DEFAULT_PLATFORMS)),
+      PLATFORM_MODS: pm ? JSON.parse(pm) : JSON.parse(JSON.stringify(DEFAULT_MODULES)),
+      MODULE_EFFORT: me ? JSON.parse(me) : JSON.parse(JSON.stringify(DEFAULT_MODULE_EFFORT)),
+    };
+  } catch(e) {
+    return {
+      RATE_CARD: JSON.parse(JSON.stringify(DEFAULT_RATE_CARD)),
+      PLATFORMS: JSON.parse(JSON.stringify(DEFAULT_PLATFORMS)),
+      PLATFORM_MODS: JSON.parse(JSON.stringify(DEFAULT_MODULES)),
+      MODULE_EFFORT: JSON.parse(JSON.stringify(DEFAULT_MODULE_EFFORT)),
+    };
+  }
+}
+function saveMasters() {
+  localStorage.setItem('erpion_ratecard', JSON.stringify(M.RATE_CARD));
+  localStorage.setItem('erpion_platforms', JSON.stringify(M.PLATFORMS));
+  localStorage.setItem('erpion_platformmods', JSON.stringify(M.PLATFORM_MODS));
+  localStorage.setItem('erpion_moduleeffort', JSON.stringify(M.MODULE_EFFORT));
+  const now = new Date();
+  document.getElementById('lastSaved').textContent = 'Saved ' + now.toLocaleTimeString();
+  addLog('Masters saved to browser storage', 'save');
+}
+
+let M = loadMasters(); // Live master data — editable via admin
+
+/* ═══════════════════════════════════════════════════════════
+   RATE CALCULATIONS
+═══════════════════════════════════════════════════════════ */
+const HM = 176;
+function hrly(role, useMax) {
+  const c = M.RATE_CARD[role]; if (!c) return 600;
+  const ctc = useMax ? c.maxCTC : c.minCTC;
+  return Math.round((ctc * c.overhead) / (HM * c.billable));
+}
+function mthly(role, useMax) {
+  const c = M.RATE_CARD[role]; if (!c) return 80000;
+  const ctc = useMax ? c.maxCTC : c.minCTC;
+  return Math.round(ctc * c.overhead);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EFFORT ALGORITHM
+═══════════════════════════════════════════════════════════ */
+const BUFFER=1.25, PM_SMALL=300, PM_MED=600;
+
+function calcEffort(mods) {
+  const roleMap={};
+  let raw=0;
+  mods.forEach(m => {
+    const e=M.MODULE_EFFORT[m]; if(!e) return;
+    raw+=e.h;
+    Object.entries(e.r).forEach(([role,hrs])=>{ roleMap[role]=(roleMap[role]||0)+hrs; });
+  });
+  const buf=Math.round(raw*BUFFER);
+  const rows=Object.entries(roleMap).map(([role,hrs])=>{
+    const bh=Math.round(hrs*BUFFER);
+    const mo=parseFloat((Math.ceil((bh/HM)*10)/10).toFixed(1));
+    return {role,hours:bh,months:mo,count:1};
+  });
+  if (!rows.find(r=>r.role==='Project Manager')) {
+    const maxMo=rows.length?Math.max(...rows.map(r=>r.months)):0;
+    let pmMo=0;
+    if(buf>=PM_MED) pmMo=parseFloat((maxMo*0.30).toFixed(1));
+    else if(buf>=PM_SMALL) pmMo=parseFloat((maxMo*0.20).toFixed(1));
+    if(pmMo>0) rows.push({role:'Project Manager',hours:Math.round(pmMo*HM*0.6),months:pmMo,count:1,pmAuto:true});
+  }
+  return {raw,buf,rows,maxMo:rows.length?Math.max(...rows.map(r=>r.months)):0};
+}
+function buildAutoRes() {
+  return calcEffort(S.modules).rows.map(r=>({
+    ...r,rate:mthly(r.role,S.useMax),hrly:hrly(r.role,S.useMax),source:'auto'
+  }));
+}
+function calcPricing() {
+  const all=[...S.autoRes,...S.manRes];
+  const labor=all.reduce((s,r)=>s+(parseFloat(r.months)||0)*(parseFloat(r.rate)||0)*(parseInt(r.count)||1),0);
+  const tr=+S.extras.travel||0,li=+S.extras.licenses||0,inf=+S.extras.infra||0,sup=+S.extras.support||0;
+  const sub=labor+tr+li+inf+sup;
+  const cont=sub*((+S.extras.contingency||0)/100);
+  return {labor,tr,li,inf,sup,sub,cont,total:sub+cont};
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROPOSAL STATE
+═══════════════════════════════════════════════════════════ */
+const S={
+  step:0, apiKey: localStorage.getItem('erpion_apikey')||'',
+  client:{name:'',industry:'',contact:'',email:'',location:'',website:''},
+  scopeNotes:'', aiIntel:null, aiLoading:false,
+  platform:'', modules:[], customModules:'',
+  autoRes:[], manRes:[],
+  extras:{travel:0,licenses:0,infra:0,support:0,contingency:10},
+  tone:'professional', proposal:'', useMax:false,
+  // AI / Custom platform deep-config fields
+  aiConfig:{
+    automationGoal:'',
+    problemStatement:'',
+    currentTools:'',
+    dataVolume:'medium',
+    integrations:'',
+    capabilities:[],
+    deploymentPref:'cloud',
+    complianceNeeds:'',
+    successMetrics:'',
+    expectedTimeline:'',
+    aiTools:[],
+    outputFormat:'',
+    trainingData:'',
+    scalingPlans:'',
+  },
+};
+
+// AI capability options for the picker
+const AI_CAPABILITIES = [
+  {id:'doc_ai',     label:'Document AI',         desc:'Extract, classify & process docs',   icon:'📄'},
+  {id:'chatbot',    label:'Conversational AI',    desc:'Chatbot / virtual assistant',         icon:'💬'},
+  {id:'pred',       label:'Predictive Analytics', desc:'Forecasting, demand, churn',          icon:'📈'},
+  {id:'automl',     label:'AutoML Pipeline',      desc:'Custom ML model training',            icon:'🧠'},
+  {id:'vision',     label:'Computer Vision',      desc:'Image/video recognition, OCR',        icon:'👁️'},
+  {id:'voice',      label:'Voice AI',             desc:'Speech-to-text, voice commands',      icon:'🎙️'},
+  {id:'rpa',        label:'RPA / Automation',     desc:'Rule-based process automation',       icon:'🤖'},
+  {id:'anomaly',    label:'Anomaly Detection',    desc:'Fraud, quality, ops anomalies',       icon:'🔍'},
+  {id:'recommend',  label:'Recommendation Engine',desc:'Product / content suggestions',      icon:'⭐'},
+  {id:'nlp',        label:'NLP / Text Analytics', desc:'Sentiment, entity, classification',  icon:'📝'},
+  {id:'genai',      label:'Generative AI',        desc:'Content, code, report generation',   icon:'✨'},
+  {id:'workflow',   label:'Workflow Automation',  desc:'Approval flows, triggers, bots',      icon:'⚙️'},
+];
+
+const AI_TOOLS_OPTIONS = [
+  'OpenAI GPT-4','Claude (Anthropic)','Google Gemini','Meta LLaMA',
+  'LangChain','LlamaIndex','Pinecone (Vector DB)','Weaviate',
+  'Hugging Face','AWS Bedrock','Azure OpenAI','Google Vertex AI',
+  'Make (Integromat)','n8n','Zapier','Flowise','Botpress',
+];
+
+// Platforms that trigger the AI config panel
+const AI_PLATFORM_IDS = ['ai','custom'];
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIVITY LOG
+═══════════════════════════════════════════════════════════ */
+let activityLog = JSON.parse(localStorage.getItem('erpion_log')||'[]');
+function addLog(msg, type='info') {
+  activityLog.unshift({msg, type, time: new Date().toISOString()});
+  if(activityLog.length>100) activityLog=activityLog.slice(0,100);
+  localStorage.setItem('erpion_log', JSON.stringify(activityLog));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APP MODE SWITCHING
+═══════════════════════════════════════════════════════════ */
+let appMode='proposal', adminSection='dashboard';
+function switchMode(mode) {
+  appMode=mode;
+  document.getElementById('proposalMode').style.display = mode==='proposal'?'block':'none';
+  document.getElementById('adminMode').style.display = mode==='admin'?'block':'none';
+  document.getElementById('tab-proposal').classList.toggle('active',mode==='proposal');
+  document.getElementById('tab-admin').classList.toggle('active',mode==='admin');
+  if(mode==='admin') renderAdmin();
+  else render();
+}
+
+function updateApiBar() {
+  const bar=document.getElementById('apiStatusBar');
+  if(!bar) return;
+  if(S.apiKey) bar.innerHTML='<span class="dot dot-pulse"></span>AI connected';
+  else bar.innerHTML='<span class="dot dot-off"></span>No API key';
+  bar.className='ab-status '+(S.apiKey?'st-ok':'st-no');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+function fmtINR(n){return '₹'+Math.round(n).toLocaleString('en-IN')}
+function fmtN(n){return Math.round(n).toLocaleString('en-IN')}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function goStep(n){S.step=n;render()}
+function toggleK(id){const el=document.getElementById(id);if(el)el.type=el.type==='password'?'text':'password'}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════ */
+function showModal(html) {
+  document.getElementById('modalBox').innerHTML=html;
+  document.getElementById('modalOverlay').style.display='flex';
+}
+function closeModal(e) {
+  if(!e||e.target===document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').style.display='none';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROPOSAL BUILDER SIDEBAR
+═══════════════════════════════════════════════════════════ */
+const STEPS=['Client info','Platform','Modules','Resources & cost','Generate'];
+function renderSidebar(){
+  document.getElementById('navItems').innerHTML=STEPS.map((s,i)=>`
+    <div class="nav-item ${i===S.step?'active':''} ${i<S.step?'done':''}"
+         onclick="${i<=S.step?`goStep(${i})`:''}" style="${i>S.step?'cursor:default':''}">
+      <span class="nav-num">${i<S.step?'✓':i+1}</span><span>${s}</span>
+    </div>`).join('');
+  updateApiBar();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP 1 — CLIENT INFO + AI INTEL
+═══════════════════════════════════════════════════════════ */
+function renderStep0(){
+  const I=S.aiIntel;
+  let intelHTML='';
+  if(S.aiLoading){
+    intelHTML=`<div class="intel"><h4>🔍 Researching ${esc(S.client.name)}…</h4>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+        <div class="spin" style="width:20px;height:20px;border-width:2px"></div>
+        <span style="font-size:13px;color:var(--text2)">Searching industry data, ERP fit, competitive landscape…</span>
+      </div></div>`;
+  } else if(I){
+    intelHTML=`<div class="intel">
+      <h4>🤖 AI intelligence — ${esc(I.companyName||S.client.name)}
+        <span class="badge bb">${I.found?'Company found':'Industry-based recs'}</span>
+        <span class="badge bg">Live from AI</span>
+      </h4>
+      ${I.summary?`<div class="iinsight">${esc(I.summary)}</div>`:''}
+      <div class="igrid">
+        <div class="icard"><h5>Recommended platforms</h5>
+          ${(I.platforms||[]).map(p=>{
+            const pid=M.PLATFORMS.find(x=>x.id===p.id||x.name===p.name)?.id||p.id||'';
+            return `<span class="iplat ${S.platform===pid?'applied':''}" onclick="applyPlat('${pid}')">${p.icon||'🔧'} ${p.name}</span>`;
+          }).join('')}
+        </div>
+        <div class="icard"><h5>Recommended modules</h5>
+          ${(I.modules||[]).map(m=>`<span class="itag ${S.modules.includes(m)?'applied':''}" onclick="toggleModI('${m}')">${m}</span>`).join('')}
+        </div>
+        <div class="icard"><h5>Roles typically needed</h5>
+          ${(I.roles||[]).map(r=>`<span class="itag">${r}</span>`).join('')}
+        </div>
+        <div class="icard"><h5>Key insights</h5>
+          ${(I.insights||[]).map(x=>`<div style="font-size:11px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border)">• ${esc(x)}</div>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="applybtn" onclick="applyAll()">✓ Apply all recommendations</button>
+        <button class="btn btns btnsm" onclick="S.aiIntel=null;render()">✕ Dismiss</button>
+      </div>
+    </div>`;
+  }
+  return `
+  <div class="ph"><h2>Client information</h2><p>Enter client details — AI researches the company and recommends the right stack.</p></div>
+  <div class="apibox">
+    <h4>🔑 Anthropic API key <span class="badge bb">powers AI research + proposal generation</span></h4>
+    <div class="apir">
+      <input type="password" id="ak" placeholder="sk-ant-api03-…" value="${esc(S.apiKey)}" oninput="S.apiKey=this.value;localStorage.setItem('erpion_apikey',this.value);updateApiBar()">
+      <button class="btn btns btnsm" onclick="toggleK('ak')">Show</button>
+    </div>
+    <div class="apist">${S.apiKey?'<span class="aok">✓ Key saved to browser</span>':'<span style="color:var(--text2)">Get from console.anthropic.com · stays local only</span>'}</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Client details</div>
+    <div class="fg fg2">
+      <div class="field"><label>Company / client name *</label>
+        <input type="text" value="${esc(S.client.name)}" placeholder="Acme Retail Pvt Ltd" oninput="S.client.name=this.value"></div>
+      <div class="field"><label>Industry <span style="font-size:10px;color:var(--gd)">(AI auto-detects if blank)</span></label>
+        <input type="text" value="${esc(S.client.industry)}" placeholder="Auto-detected by AI" oninput="S.client.industry=this.value"></div>
+    </div>
+    <div class="fg fg2">
+      <div class="field"><label>Website / domain <span style="font-size:10px;color:var(--text2)">(helps AI find company)</span></label>
+        <input type="text" value="${esc(S.client.website)}" placeholder="www.acmecorp.com" oninput="S.client.website=this.value"></div>
+      <div class="field"><label>City / location</label>
+        <input type="text" value="${esc(S.client.location)}" placeholder="Mumbai, Pune, Bangalore…" oninput="S.client.location=this.value"></div>
+    </div>
+    <div class="fg fg2">
+      <div class="field"><label>Contact person</label>
+        <input type="text" value="${esc(S.client.contact)}" placeholder="Mr. Rajesh Mehta" oninput="S.client.contact=this.value"></div>
+      <div class="field"><label>Email</label>
+        <input type="email" value="${esc(S.client.email)}" placeholder="ceo@acmecorp.com" oninput="S.client.email=this.value"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;align-items:center">
+      <button class="btn btnp btnsm" onclick="runIntel()" ${!S.apiKey?'disabled title="Add API key first"':''}>🔍 Research company with AI</button>
+      <span style="font-size:11px;color:var(--text2)">Fetches company profile, industry, ERP best fit & competitive insights</span>
+    </div>
+    ${intelHTML}
+  </div>
+  <div class="card">
+    <div class="card-title">Business background <span class="badge bg">AI uses this to personalise proposal</span></div>
+    <div class="field"><label>Business challenges, pain points & goals</label>
+      <textarea placeholder="e.g. Manual inventory with Excel, no centralised accounting, expanding warehouses, outgrowing Tally, real-time visibility needed…" oninput="S.scopeNotes=this.value">${esc(S.scopeNotes)}</textarea>
+    </div>
+  </div>
+  <div class="navrow"><span></span>
+    <button class="btn btnp" onclick="if(S.client.name.trim())goStep(1);else alert('Please enter client name')">Next: Choose platform →</button>
+  </div>`;
+}
+
+/* ═══ AI INTEL CALL (uses web_search tool for live internet data) ═══ */
+async function runIntel(){
+  if(!S.apiKey.trim()){alert('Please enter your Anthropic API key first.');return}
+  if(!S.client.name.trim()){alert('Please enter the client company name first.');return}
+  S.aiLoading=true; S.aiIntel=null; render();
+  addLog(`AI research started: ${S.client.name}`, 'ai');
+
+  const validMods=Object.keys(M.MODULE_EFFORT).join(', ');
+  const validPlats=M.PLATFORMS.filter(p=>p.active).map(p=>p.id).join(', ');
+
+  const prompt=`Search the internet for information about the company "${S.client.name}"${S.client.website?' (website: '+S.client.website+')':''}${S.client.location?' in '+S.client.location:''}.
+
+Use the web_search tool to find: their business, industry, size, technology usage, recent news, and ERP/software needs.
+
+Then provide ERP implementation recommendations for ERPion Technologies.
+
+Respond ONLY with a valid JSON object (no markdown, no extra text):
+{
+  "found": true or false,
+  "companyName": "official name",
+  "industry": "specific industry vertical",
+  "summary": "2-3 sentences: what they do + likely ERP needs based on research",
+  "platforms": [{"id":"${validPlats.split(', ').join('|')}","name":"name","icon":"emoji"}],
+  "modules": ["module names from allowed list only"],
+  "roles": ["role names from: ${Object.keys(M.RATE_CARD).join(', ')}"],
+  "insights": ["specific insight 1 from research","insight 2","insight 3"]
+}
+Valid platform IDs: ${validPlats}
+Valid modules: ${validMods}
+Recommend max 2 platforms and 5-8 modules most relevant to this specific company.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':S.apiKey.trim(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1500,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:prompt}]
+      })});
+    const d=await res.json();
+    // Find the text block in response (after tool use)
+    const textBlock=d.content?.find(b=>b.type==='text');
+    const raw=textBlock?.text||'{}';
+    const intel=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    S.aiIntel=intel;
+    if(intel.industry&&!S.client.industry) S.client.industry=intel.industry;
+    addLog(`AI research complete: ${intel.companyName||S.client.name} — ${intel.industry||'industry detected'}`, 'ai');
+  }catch(e){
+    S.aiIntel={found:false,summary:'Could not fetch data. Fill in details manually.',platforms:[],modules:[],roles:[],insights:[]};
+    addLog(`AI research failed: ${e.message}`, 'error');
+  }
+  S.aiLoading=false; render();
+}
+
+function applyPlat(id){if(!id)return;S.platform=id;S.modules=[];S.autoRes=[];render()}
+function toggleModI(m){if(S.modules.includes(m))S.modules=S.modules.filter(x=>x!==m);else S.modules.push(m);render()}
+function applyAll(){
+  if(!S.aiIntel)return;
+  if(S.aiIntel.platforms?.length){
+    const p=S.aiIntel.platforms[0];
+    const pid=M.PLATFORMS.find(x=>x.id===p.id||x.name===p.name)?.id||p.id;
+    if(pid){S.platform=pid;S.modules=[];}
+  }
+  if(S.aiIntel.modules?.length) S.modules=[...new Set([...S.modules,...S.aiIntel.modules.filter(m=>M.MODULE_EFFORT[m])])];
+  S.autoRes=buildAutoRes();
+  addLog(`AI recommendations applied for ${S.client.name}`, 'ai');
+  goStep(2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP 2 — PLATFORM + AI CONFIG
+═══════════════════════════════════════════════════════════ */
+function renderStep1(){
+  const active=M.PLATFORMS.filter(p=>p.active);
+  const isAIPlatform = AI_PLATFORM_IDS.includes(S.platform);
+
+  const aiConfigHTML = isAIPlatform ? renderAIConfigPanel() : '';
+
+  return `
+  <div class="ph"><h2>Select platform</h2><p>Choose the ERP or software platform. For AI/Custom builds, define the automation scope below.</p></div>
+  <div class="card">
+    <div class="pgrid">
+      ${active.map(p=>`
+        <div class="pcard ${S.platform===p.id?'sel':''}" onclick="S.platform='${p.id}';S.modules=[];S.autoRes=[];render()">
+          <span class="pi">${p.icon}</span><div class="pn">${p.name}</div><div class="pd">${p.desc}</div>
+          ${S.aiIntel?.platforms?.find(x=>x.id===p.id)?'<div style="margin-top:5px"><span class="badge bg" style="font-size:8px">AI recommended</span></div>':''}
+          ${AI_PLATFORM_IDS.includes(p.id)?'<div style="margin-top:5px"><span class="badge bp" style="font-size:8px">Custom scope</span></div>':''}
+        </div>`).join('')}
+    </div>
+  </div>
+
+  ${aiConfigHTML}
+
+  <div class="navrow">
+    <button class="btn btns" onclick="goStep(0)">← Back</button>
+    <button class="btn btnp" onclick="if(S.platform)goStep(2);else alert('Select a platform')">Next: Select modules →</button>
+  </div>`;
+}
+
+/* ═══ AI CONFIG PANEL RENDERER ═══ */
+function renderAIConfigPanel(){
+  const c = S.aiConfig;
+  const plat = M.PLATFORMS.find(p=>p.id===S.platform);
+
+  const capRows = AI_CAPABILITIES.map(cap=>`
+    <label class="cap-chip ${c.capabilities.includes(cap.id)?'sel':''}">
+      <input type="checkbox" ${c.capabilities.includes(cap.id)?'checked':''} onchange="toggleCap('${cap.id}')">
+      <span class="cap-icon">${cap.icon}</span>
+      <div><div class="cap-name">${cap.label}</div><div class="cap-desc">${cap.desc}</div></div>
+    </label>`).join('');
+
+  const toolRows = AI_TOOLS_OPTIONS.map(t=>`
+    <span class="tool-tag ${c.aiTools.includes(t)?'sel':''}" onclick="toggleTool('${t}')">${t}</span>`).join('');
+
+  // Summary of filled fields
+  const filledSummary = [];
+  if(c.automationGoal) filledSummary.push({l:'Automation goal',v:c.automationGoal.substring(0,60)+(c.automationGoal.length>60?'…':'')});
+  if(c.problemStatement) filledSummary.push({l:'Problem statement',v:c.problemStatement.substring(0,60)+(c.problemStatement.length>60?'…':'')});
+  if(c.capabilities.length) filledSummary.push({l:'AI capabilities',v:c.capabilities.map(id=>AI_CAPABILITIES.find(x=>x.id===id)?.label||id).join(', ')});
+  if(c.aiTools.length) filledSummary.push({l:'AI tools / platforms',v:c.aiTools.join(', ')});
+  if(c.currentTools) filledSummary.push({l:'Current tools',v:c.currentTools});
+  if(c.integrations) filledSummary.push({l:'Integrations needed',v:c.integrations});
+  if(c.dataVolume) filledSummary.push({l:'Data volume',v:{low:'Low (< 10k records/day)',medium:'Medium (10k–500k/day)',high:'High (500k–5M/day)',enterprise:'Enterprise (5M+/day)'}[c.dataVolume]||c.dataVolume});
+  if(c.deploymentPref) filledSummary.push({l:'Deployment',v:{cloud:'Cloud (SaaS/managed)',on_premise:'On-premise',hybrid:'Hybrid'}[c.deploymentPref]||c.deploymentPref});
+  if(c.complianceNeeds) filledSummary.push({l:'Compliance',v:c.complianceNeeds});
+  if(c.successMetrics) filledSummary.push({l:'Success metrics',v:c.successMetrics});
+  if(c.expectedTimeline) filledSummary.push({l:'Timeline',v:c.expectedTimeline});
+  if(c.outputFormat) filledSummary.push({l:'Output / deliverables',v:c.outputFormat});
+  if(c.scalingPlans) filledSummary.push({l:'Scaling plans',v:c.scalingPlans});
+
+  const summaryHTML = filledSummary.length ? `
+    <div class="ai-summary-box">
+      <h5>📋 Scope summary — flows into proposal</h5>
+      ${filledSummary.map(r=>`<div class="ai-sum-row"><span class="asl">${r.l}</span><span class="asv">${esc(r.v)}</span></div>`).join('')}
+    </div>` : '';
+
+  return `
+  <div class="ai-config-panel">
+    <div class="acp-title">🤖 ${plat?.name} — Automation scope definition
+      <span class="badge bp">Connected to proposal flow</span>
+    </div>
+    <div class="acp-sub">Define exactly what the client wants to automate. Every field here feeds directly into the proposal, effort estimation, and team allocation.</div>
+
+    <div class="ai-config-section">
+      <h5>1. What do they want to automate / build?</h5>
+      <div class="fg fg1" style="margin-bottom:10px">
+        <div class="field">
+          <label>Automation goal <span style="color:#A32D2D">*</span></label>
+          <textarea placeholder="e.g. Automate invoice processing from email → ERP, build an AI chatbot for customer support, create predictive demand forecasting for 3 warehouses…" oninput="S.aiConfig.automationGoal=this.value;refreshAISummary()">${esc(c.automationGoal)}</textarea>
+        </div>
+      </div>
+      <div class="fg fg1">
+        <div class="field">
+          <label>Problem statement / current pain</label>
+          <textarea placeholder="e.g. Finance team manually processes 200+ invoices daily, taking 4 hours. No integration between WhatsApp orders and inventory system…" style="min-height:60px" oninput="S.aiConfig.problemStatement=this.value;refreshAISummary()">${esc(c.problemStatement)}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-config-section">
+      <h5>2. Select AI capabilities needed</h5>
+      <div class="cap-grid">${capRows}</div>
+    </div>
+
+    <div class="ai-config-section">
+      <h5>3. AI tools & platforms to use / integrate</h5>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">Click to select tools the client prefers or you plan to use:</div>
+      <div class="tool-tags">${toolRows}</div>
+      <div class="field" style="margin-top:10px">
+        <label>Other tools / custom stack</label>
+        <input type="text" placeholder="e.g. Custom Python ML pipeline, proprietary ERP API…" value="${esc(c.currentTools)}" oninput="S.aiConfig.currentTools=this.value">
+      </div>
+    </div>
+
+    <div class="ai-config-section">
+      <h5>4. Data & integration requirements</h5>
+      <div class="fg fg2">
+        <div class="field">
+          <label>Systems / apps to integrate with</label>
+          <input type="text" placeholder="e.g. SAP, Tally, Shopify, WhatsApp Business API, Google Sheets…" value="${esc(c.integrations)}" oninput="S.aiConfig.integrations=this.value">
+        </div>
+        <div class="field">
+          <label>Data volume / throughput</label>
+          <select oninput="S.aiConfig.dataVolume=this.value">
+            <option value="low" ${c.dataVolume==='low'?'selected':''}>Low — &lt; 10k records/day</option>
+            <option value="medium" ${c.dataVolume==='medium'?'selected':''}>Medium — 10k–500k/day</option>
+            <option value="high" ${c.dataVolume==='high'?'selected':''}>High — 500k–5M/day</option>
+            <option value="enterprise" ${c.dataVolume==='enterprise'?'selected':''}>Enterprise — 5M+/day</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg fg2">
+        <div class="field">
+          <label>Deployment preference</label>
+          <select oninput="S.aiConfig.deploymentPref=this.value">
+            <option value="cloud" ${c.deploymentPref==='cloud'?'selected':''}>Cloud (SaaS / managed)</option>
+            <option value="on_premise" ${c.deploymentPref==='on_premise'?'selected':''}>On-premise (client servers)</option>
+            <option value="hybrid" ${c.deploymentPref==='hybrid'?'selected':''}>Hybrid</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Compliance / security needs</label>
+          <input type="text" placeholder="e.g. GDPR, ISO 27001, SOC2, RBI guidelines, no cloud storage…" value="${esc(c.complianceNeeds)}" oninput="S.aiConfig.complianceNeeds=this.value">
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-config-section">
+      <h5>5. Expected outcomes & delivery</h5>
+      <div class="fg fg2">
+        <div class="field">
+          <label>Success metrics (what does "done" look like?)</label>
+          <input type="text" placeholder="e.g. 80% reduction in manual invoice processing, chatbot handles 70% of queries…" value="${esc(c.successMetrics)}" oninput="S.aiConfig.successMetrics=this.value">
+        </div>
+        <div class="field">
+          <label>Expected go-live / timeline</label>
+          <input type="text" placeholder="e.g. 3 months, Q3 2025, before Diwali season…" value="${esc(c.expectedTimeline)}" oninput="S.aiConfig.expectedTimeline=this.value">
+        </div>
+      </div>
+      <div class="fg fg2">
+        <div class="field">
+          <label>Deliverables / output format</label>
+          <input type="text" placeholder="e.g. Web dashboard, mobile app, API endpoints, Slack bot, PDF reports…" value="${esc(c.outputFormat)}" oninput="S.aiConfig.outputFormat=this.value">
+        </div>
+        <div class="field">
+          <label>Scaling / future plans</label>
+          <input type="text" placeholder="e.g. Phase 2 will add 3 more cities, plan to process 10× data in 12 months…" value="${esc(c.scalingPlans)}" oninput="S.aiConfig.scalingPlans=this.value">
+        </div>
+      </div>
+      <div class="fg fg1">
+        <div class="field">
+          <label>Training data availability</label>
+          <input type="text" placeholder="e.g. 3 years of transaction history in MySQL, 50k labelled customer support tickets, live API access to ERP…" value="${esc(c.trainingData)}" oninput="S.aiConfig.trainingData=this.value">
+        </div>
+      </div>
+    </div>
+
+    ${summaryHTML}
+  </div>`;
+}
+
+function toggleCap(id){
+  if(S.aiConfig.capabilities.includes(id)) S.aiConfig.capabilities=S.aiConfig.capabilities.filter(x=>x!==id);
+  else S.aiConfig.capabilities.push(id);
+  render();
+}
+function toggleTool(t){
+  if(S.aiConfig.aiTools.includes(t)) S.aiConfig.aiTools=S.aiConfig.aiTools.filter(x=>x!==t);
+  else S.aiConfig.aiTools.push(t);
+  render();
+}
+function refreshAISummary(){
+  // lightweight refresh — just re-render the summary box in place if it exists
+  const panel = document.querySelector('.ai-config-panel');
+  if(panel) {
+    // find and update summary only
+    const existing = panel.querySelector('.ai-summary-box');
+    const c=S.aiConfig;
+    const filledSummary=[];
+    if(c.automationGoal) filledSummary.push({l:'Automation goal',v:c.automationGoal.substring(0,60)+(c.automationGoal.length>60?'…':'')});
+    if(c.problemStatement) filledSummary.push({l:'Problem statement',v:c.problemStatement.substring(0,60)+(c.problemStatement.length>60?'…':'')});
+    if(c.capabilities.length) filledSummary.push({l:'AI capabilities',v:c.capabilities.map(id=>AI_CAPABILITIES.find(x=>x.id===id)?.label||id).join(', ')});
+    if(c.aiTools.length) filledSummary.push({l:'AI tools',v:c.aiTools.join(', ')});
+    if(c.integrations) filledSummary.push({l:'Integrations',v:c.integrations});
+    if(c.successMetrics) filledSummary.push({l:'Success metrics',v:c.successMetrics});
+    if(!filledSummary.length) { if(existing) existing.remove(); return; }
+    const html=`<div class="ai-summary-box"><h5>📋 Scope summary — flows into proposal</h5>${filledSummary.map(r=>`<div class="ai-sum-row"><span class="asl">${r.l}</span><span class="asv">${esc(r.v)}</span></div>`).join('')}</div>`;
+    if(existing) existing.outerHTML=html;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP 3 — MODULES
+═══════════════════════════════════════════════════════════ */
+function renderStep2(){
+  const plat=M.PLATFORMS.find(p=>p.id===S.platform);
+  const mods=(M.PLATFORM_MODS[S.platform]||[]);
+  const eff=calcEffort(S.modules);
+  const aiRec=S.aiIntel?.modules||[];
+  const dc=c=>c==='high'?'dh':c==='medium'?'dm':'dl';
+  const pmLabel=eff.buf>=PM_MED?`<span class="badge ba">Large — PM at 30%</span>`:
+                eff.buf>=PM_SMALL?`<span class="badge bb">Medium — PM at 20%</span>`:
+                `<span class="badge" style="background:var(--bg3);color:var(--text2)">Small — lean team</span>`;
+  let effHTML='';
+  if(S.modules.length>0){
+    const maxH=Math.max(...eff.rows.map(r=>r.hours),1);
+    effHTML=`<div class="ebox">
+      <h4>Effort estimate ${pmLabel}</h4>
+      <div class="mrow">
+        <div class="met"><div class="ml">Buffered hours</div><div class="mv">${fmtN(eff.buf)}<span class="mu"> hrs</span></div></div>
+        <div class="met"><div class="ml">Duration</div><div class="mv">${eff.maxMo.toFixed(1)}<span class="mu"> mo</span></div></div>
+        <div class="met"><div class="ml">Roles needed</div><div class="mv">${eff.rows.length}</div></div>
+        <div class="met"><div class="ml">Raw hours</div><div class="mv">${fmtN(eff.raw)}<span class="mu"> hrs</span></div></div>
+      </div>
+      <table class="rtbl">
+        <thead><tr><th>Role</th><th>Hrs (buffered)</th><th>Months</th><th>Share</th></tr></thead>
+        <tbody>${eff.rows.sort((a,b)=>b.hours-a.hours).map(r=>`
+          <tr><td><strong>${r.role}</strong>${r.pmAuto?'<span class="stag sauto">auto</span>':''}</td>
+          <td>${fmtN(r.hours)} hrs</td><td>${r.months} mo</td>
+          <td><div style="display:flex;align-items:center;gap:5px">
+            <div class="bw"><div class="bf" style="width:${Math.round(r.hours/maxH*100)}%"></div></div>
+            <span style="font-size:10px;color:var(--text2)">${Math.round(r.hours/eff.buf*100)}%</span>
+          </div></td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+  return `
+  <div class="ph"><h2>Modules — ${plat?.name||''}</h2><p>Effort auto-calculates. Manage module library in Admin → Modules.</p></div>
+  ${AI_PLATFORM_IDS.includes(S.platform) && S.aiConfig.capabilities.length ? `
+  <div style="background:var(--purple);border:1px solid #7F77DD;border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px">
+    <span style="font-size:18px;flex-shrink:0">🤖</span>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:#3C3489;margin-bottom:4px">AI scope carried forward</div>
+      <div style="font-size:11px;color:#534AB7">
+        <strong>Goal:</strong> ${esc(S.aiConfig.automationGoal?.substring(0,80)||'—')}${S.aiConfig.automationGoal?.length>80?'…':''}<br>
+        <strong>Capabilities:</strong> ${S.aiConfig.capabilities.map(id=>AI_CAPABILITIES.find(x=>x.id===id)?.label||id).join(' · ')}<br>
+        ${S.aiConfig.aiTools.length?`<strong>Tools:</strong> ${S.aiConfig.aiTools.slice(0,4).join(', ')}${S.aiConfig.aiTools.length>4?` +${S.aiConfig.aiTools.length-4} more`:''}`:''} 
+      </div>
+      <button class="btn btnsm" onclick="goStep(1)" style="margin-top:6px;background:none;border:1px solid #7F77DD;color:#3C3489;padding:4px 10px;font-size:11px">✏️ Edit AI scope</button>
+    </div>
+  </div>` : ''}
+  <div class="card">
+    <div class="tip">⚡ Hours = setup + config + data migration + testing. 25% buffer for UAT, changes, go-live. PM auto-allocated by project size.</div>
+    <div class="mgrid">
+      ${mods.map(m=>{
+        const e=M.MODULE_EFFORT[m]||{h:80,cx:'medium',r:{}};
+        const top=Object.keys(e.r).slice(0,2).join(', ');
+        const isAI=aiRec.includes(m);
+        return `<label class="mchip ${S.modules.includes(m)?'sel':''}" style="${isAI?'border-color:rgba(29,158,117,.5)':''}">
+          <input type="checkbox" ${S.modules.includes(m)?'checked':''} onchange="toggleMod('${m}')">
+          <div>
+            <div class="mn">${m}${isAI?'<span class="badge bg" style="font-size:8px;margin-left:4px">AI rec</span>':''}</div>
+            <div class="mm"><span class="cdot ${dc(e.cx)}"></span>${e.cx[0].toUpperCase()+e.cx.slice(1)} · ~${e.h} hrs</div>
+            <div class="mr">${top}</div>
+          </div>
+        </label>`;
+      }).join('')}
+    </div>
+    ${effHTML}
+    <div class="fg fg1" style="margin-top:14px">
+      <div class="field"><label>Custom requirements / integrations</label>
+        <textarea placeholder="e.g. WhatsApp alerts, custom GST reports, Shopify sync, Tally migration…" oninput="S.customModules=this.value">${esc(S.customModules)}</textarea>
+      </div>
+    </div>
+  </div>
+  <div class="navrow">
+    <button class="btn btns" onclick="goStep(1)">← Back</button>
+    <button class="btn btnp" onclick="if(S.modules.length>0){S.autoRes=buildAutoRes();goStep(3)}else alert('Select at least one module')">Next: Resources & cost →</button>
+  </div>`;
+}
+function toggleMod(m){if(S.modules.includes(m))S.modules=S.modules.filter(x=>x!==m);else S.modules.push(m);render()}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP 4 — RESOURCES & COST
+═══════════════════════════════════════════════════════════ */
+function renderStep3(){
+  const eff=calcEffort(S.modules), p=calcPricing();
+  const all=[...S.autoRes,...S.manRes];
+  const resRow=(r,i,src)=>`
+    <tr>
+      <td style="width:23%">
+        <select style="width:100%" onchange="updR('${src}',${i},'role',this.value)">
+          ${Object.keys(M.RATE_CARD).map(ro=>`<option value="${ro}" ${r.role===ro?'selected':''}>${ro}</option>`).join('')}
+        </select>
+        <span class="stag ${src==='auto'?'sauto':'sman'}">${src}</span>
+        ${r.pmAuto?'<span class="stag sauto">auto PM</span>':''}
+      </td>
+      <td style="width:10%"><input type="number" value="${r.hours||0}" min="0" step="8" ${src==='auto'?'readonly':''} style="width:100%;${src==='auto'?'background:var(--bg2);color:var(--text2)':''}" onchange="updR('${src}',${i},'hours',this.value)"></td>
+      <td style="width:9%"><input type="number" value="${r.months}" min="0.5" step="0.5" style="width:100%" onchange="updR('${src}',${i},'months',this.value);rP()"></td>
+      <td style="width:7%"><input type="number" value="${r.count||1}" min="1" max="10" style="width:100%" onchange="updR('${src}',${i},'count',this.value);rP()"></td>
+      <td style="width:11%"><span style="font-size:11px;color:var(--bt);font-weight:600">${fmtINR(hrly(r.role,S.useMax))}/hr</span></td>
+      <td style="width:15%"><input type="number" value="${r.rate}" min="0" step="1000" style="width:100%" onchange="updR('${src}',${i},'rate',this.value);rP()"></td>
+      <td style="width:14%;color:var(--gd);font-weight:600;font-size:12px">${fmtINR((parseFloat(r.months)||0)*(parseFloat(r.rate)||0)*(parseInt(r.count)||1))}</td>
+      <td style="width:7%"><button class="rmbtn" onclick="remR('${src}',${i})">×</button></td>
+    </tr>`;
+  const hbRows=all.map(r=>{
+    const h=parseFloat(r.hours)||0,cnt=parseInt(r.count)||1,hr=hrly(r.role,S.useMax),mo=parseFloat(r.months)||0;
+    return {...r,h,cnt,hr,hcost:h*hr*cnt,mcost:mo*(parseFloat(r.rate)||0)*cnt};
+  });
+  const totHC=hbRows.reduce((s,r)=>s+r.hcost,0);
+  return `
+  <div class="ph"><h2>Resources & cost</h2><p>CTC-derived rates. Edit rate card in Admin → Resources. Two costing models for flexibility.</p></div>
+  <div class="card">
+    <div class="card-title">ERPion rate card <span class="badge bg">live from admin masters</span>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:400;margin-left:auto;text-transform:none;letter-spacing:0;cursor:pointer">
+        <input type="checkbox" ${S.useMax?'checked':''} onchange="S.useMax=this.checked;S.autoRes=buildAutoRes();render()" style="width:14px;height:14px;accent-color:var(--green)">
+        Use upper CTC band
+      </label>
+    </div>
+    <div class="rlgrid">
+      ${Object.entries(M.RATE_CARD).map(([role,c])=>{
+        const hMin=hrly(role,false),hMax=hrly(role,true);
+        const hRng=hMin===hMax?fmtINR(hMin):fmtINR(hMin)+'–'+fmtINR(hMax);
+        const cRng=c.minCTC===c.maxCTC?fmtINR(c.minCTC):fmtINR(c.minCTC)+'–'+fmtINR(c.maxCTC);
+        return `<div class="rlcard">
+          <div><div class="rln">${role}</div><div class="rls">CTC: ${cRng}/mo · Billable ${Math.round(c.billable*100)}%</div></div>
+          <div style="text-align:right"><div class="rlr">${hRng}/hr</div><div class="rls">Monthly: ${fmtINR(mthly(role,S.useMax))}</div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text2)">Hourly = (CTC × overhead) ÷ (176 hrs × billable%). Overhead covers PF, ESIC, gratuity, office, tools.</div>
+  </div>
+  <div class="notice">Auto-allocated from <strong>${S.modules.length} modules</strong> · <strong>${fmtN(eff.buf)} buffered hours</strong> · ~<strong>${eff.maxMo} months</strong>
+    ${eff.buf>=PM_MED?' · PM at 30%':eff.buf>=PM_SMALL?' · PM at 20%':' · Small project, no PM'}</div>
+  <div class="rwrap">
+    <div class="rhead">
+      <h4>Implementation team <span class="badge bg">module-driven</span></h4>
+      <button class="btn btns btnsm" onclick="S.autoRes=buildAutoRes();render()">↺ Recalculate</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="restbl" style="min-width:700px;table-layout:fixed">
+      <thead><tr><th>Role</th><th>Effort hrs</th><th>Months</th><th>Count</th><th>Hourly</th><th>Monthly rate (₹)</th><th>Total cost</th><th></th></tr></thead>
+      <tbody>
+        ${S.autoRes.map((r,i)=>resRow(r,i,'auto')).join('')}
+        ${S.manRes.map((r,i)=>resRow(r,i,'manual')).join('')}
+      </tbody>
+    </table></div>
+    <button class="addbtn" onclick="addManual()">+ Add resource manually</button>
+  </div>
+  <div class="hbox">
+    <h4>Dual costing — hours-based vs time & material</h4>
+    <div style="overflow-x:auto">
+    <table class="htbl" style="min-width:640px">
+      <thead><tr><th>Role</th><th>Hrs × Count</th><th>@ Hourly</th><th>Hours cost</th><th>Months × Count</th><th>@ Monthly</th><th>Months cost</th></tr></thead>
+      <tbody>${hbRows.map(r=>`<tr>
+        <td><strong>${r.role}</strong></td><td>${fmtN(r.h)} × ${r.cnt}</td><td>${fmtINR(r.hr)}/hr</td>
+        <td style="color:var(--bt);font-weight:500">${fmtINR(r.hcost)}</td>
+        <td>${r.months} × ${r.cnt}</td><td>${fmtINR(mthly(r.role,S.useMax))}/mo</td>
+        <td style="color:var(--gd);font-weight:500">${fmtINR(r.mcost)}</td>
+      </tr>`).join('')}</tbody>
+      <tfoot><tr><td colspan="3">Total</td><td style="color:var(--bt)">${fmtINR(totHC)}</td><td colspan="2"></td><td style="color:var(--gd)">${fmtINR(p.labor)}</td></tr></tfoot>
+    </table></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:8px"><strong>Hours-based:</strong> Fixed-price contracts. &nbsp;|&nbsp; <strong>Monthly T&M:</strong> Retainer / ongoing projects. Proposal uses monthly totals.</div>
+  </div>
+  <div class="playout">
+    <div class="occard"><h4>Other costs</h4>
+      <div class="crow"><label>Travel & on-site expenses (₹)</label><input type="number" value="${S.extras.travel}" step="5000" onchange="S.extras.travel=this.value;rP()"></div>
+      <div class="crow"><label>Software / platform licenses (₹)</label><input type="number" value="${S.extras.licenses}" step="5000" onchange="S.extras.licenses=this.value;rP()"></div>
+      <div class="crow"><label>Infrastructure / cloud (₹)</label><input type="number" value="${S.extras.infra}" step="5000" onchange="S.extras.infra=this.value;rP()"></div>
+      <div class="crow"><label>Post go-live support (₹)</label><input type="number" value="${S.extras.support}" step="5000" onchange="S.extras.support=this.value;rP()"></div>
+      <div class="crow"><label>Contingency (%)</label><input type="number" value="${S.extras.contingency}" min="0" max="30" onchange="S.extras.contingency=this.value;rP()"></div>
+    </div>
+    <div class="psum"><div class="psum-hd">Engagement value</div><div class="psum-bd" id="pBox">${prRows(p)}</div></div>
+  </div>
+  <div class="navrow">
+    <button class="btn btns" onclick="goStep(2)">← Back</button>
+    <button class="btn btnp" onclick="goStep(4)">Next: Generate proposal →</button>
+  </div>`;
+}
+function prRows(p){return `
+  <div class="pr"><span class="pl">Labor (monthly T&M)</span><span class="pv">${fmtINR(p.labor)}</span></div>
+  <div class="pr"><span class="pl">Travel & expenses</span><span class="pv">${fmtINR(p.tr)}</span></div>
+  <div class="pr"><span class="pl">Software licenses</span><span class="pv">${fmtINR(p.li)}</span></div>
+  <div class="pr"><span class="pl">Infrastructure</span><span class="pv">${fmtINR(p.inf)}</span></div>
+  <div class="pr"><span class="pl">Post go-live support</span><span class="pv">${fmtINR(p.sup)}</span></div>
+  <div class="pdiv"></div>
+  <div class="pr"><span class="pl">Subtotal</span><span class="pv">${fmtINR(p.sub)}</span></div>
+  <div class="pr"><span class="pl">Contingency (${S.extras.contingency}%)</span><span class="pv">${fmtINR(p.cont)}</span></div>
+  <div class="pdiv"></div>
+  <div class="ptot"><span class="pl">Total value</span><span class="pv">${fmtINR(p.total)}</span></div>`;}
+function rP(){const b=document.getElementById('pBox');if(b)b.innerHTML=prRows(calcPricing())}
+function updR(src,i,k,v){if(src==='auto')S.autoRes[i][k]=v;else S.manRes[i][k]=v;rP()}
+function remR(src,i){if(src==='auto')S.autoRes.splice(i,1);else S.manRes.splice(i,1);render()}
+function addManual(){S.manRes.push({role:'Functional Consultant',hours:80,months:1,count:1,rate:mthly('Functional Consultant',S.useMax),hrly:hrly('Functional Consultant',S.useMax),source:'manual'});render()}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP 5 — GENERATE
+═══════════════════════════════════════════════════════════ */
+function renderStep4(){
+  const p=calcPricing(),eff=calcEffort(S.modules);
+  const plat=M.PLATFORMS.find(x=>x.id===S.platform);
+  const today=new Date();
+  const refNo=`ERP-${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${Math.floor(Math.random()*9000+1000)}`;
+  if(!S.proposalRef) S.proposalRef=refNo;
+
+  return `
+  <div class="ph"><h2>Generate proposal</h2><p>Fill signing details, generate AI content, then export a complete branded PDF document.</p></div>
+  <div class="sbar">
+    <div class="sc"><div class="sl">Client</div><div class="sv" style="font-size:13px">${esc(S.client.name)||'—'}</div></div>
+    <div class="sc"><div class="sl">Platform</div><div class="sv" style="font-size:13px">${plat?.name||'—'}${AI_PLATFORM_IDS.includes(S.platform)&&S.aiConfig.capabilities.length?'<span class="badge bp" style="font-size:8px;margin-left:6px;vertical-align:middle">AI scoped</span>':''}</div></div>
+    <div class="sc"><div class="sl">Total hours</div><div class="sv">${fmtN(eff.buf)}<span class="su"> hrs</span></div></div>
+    <div class="sc"><div class="sl">Engagement value</div><div class="sv" style="color:var(--green)">${fmtINR(p.total)}</div></div>
+  </div>
+  ${AI_PLATFORM_IDS.includes(S.platform)&&S.aiConfig.automationGoal?`
+  <div style="background:var(--purple);border:1px solid #7F77DD;border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;font-size:12px;color:#3C3489">
+    <strong>🤖 AI automation scope:</strong> ${esc(S.aiConfig.automationGoal?.substring(0,120)||'')}${S.aiConfig.automationGoal?.length>120?'…':''}
+    ${S.aiConfig.capabilities.length?`<br><strong>Capabilities:</strong> ${S.aiConfig.capabilities.map(id=>AI_CAPABILITIES.find(x=>x.id===id)?.label||id).join(' · ')}`:''}
+    <button class="btn btnsm" onclick="goStep(1)" style="margin-left:10px;background:none;border:1px solid #7F77DD;color:#3C3489;padding:3px 10px;font-size:11px">Edit scope</button>
+  </div>` : ''}
+
+  <!-- SIGNING PARTIES -->
+  <div class="card">
+    <div class="card-title">Proposal details & signing parties <span class="badge bg">appears on final document</span></div>
+    <div class="fg fg2" style="margin-bottom:10px">
+      <div class="field"><label>Proposal reference no.</label>
+        <input type="text" value="${esc(S.proposalRef||refNo)}" oninput="S.proposalRef=this.value"></div>
+      <div class="field"><label>Proposal date</label>
+        <input type="text" value="${esc(S.proposalDate||today.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}))}" oninput="S.proposalDate=this.value"></div>
+    </div>
+    <div class="fg fg2" style="margin-bottom:10px">
+      <div class="field"><label>Valid until</label>
+        <input type="text" value="${esc(S.validUntil||new Date(today.getTime()+30*86400000).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}))}" oninput="S.validUntil=this.value"></div>
+      <div class="field"><label>GST applicable (%)</label>
+        <input type="number" value="${S.gstPct??18}" min="0" max="28" oninput="S.gstPct=+this.value"></div>
+    </div>
+    <div class="sig-grid">
+      <div class="sig-party">
+        <h4>🏢 Service provider (ERPion)</h4>
+        <div class="fg fg1" style="margin-bottom:8px">
+          <div class="field"><label>Company full name</label>
+            <input type="text" value="${esc(S.erpionCo||'ERPion Technologies Pvt Ltd')}" oninput="S.erpionCo=this.value"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Authorised signatory name</label>
+            <input type="text" value="${esc(S.erpionSignatory||'')}" placeholder="e.g. Rahul Sharma" oninput="S.erpionSignatory=this.value"></div>
+          <div class="field"><label>Designation</label>
+            <input type="text" value="${esc(S.erpionDesig||'Director / CEO')}" oninput="S.erpionDesig=this.value"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Address</label>
+            <input type="text" value="${esc(S.erpionAddr||'')}" placeholder="Registered office address" oninput="S.erpionAddr=this.value"></div>
+          <div class="field"><label>GST No.</label>
+            <input type="text" value="${esc(S.erpionGST||'')}" placeholder="27AAAAA0000A1Z5" oninput="S.erpionGST=this.value"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Email</label>
+            <input type="email" value="${esc(S.erpionEmail||'')}" placeholder="contracts@erpion.in" oninput="S.erpionEmail=this.value"></div>
+          <div class="field"><label>Phone</label>
+            <input type="text" value="${esc(S.erpionPhone||'')}" placeholder="+91 98XXXXXX00" oninput="S.erpionPhone=this.value"></div>
+        </div>
+      </div>
+      <div class="sig-party">
+        <h4>🏭 Client party</h4>
+        <div class="fg fg1" style="margin-bottom:8px">
+          <div class="field"><label>Company full legal name</label>
+            <input type="text" value="${esc(S.clientCo||S.client.name||'')}" oninput="S.clientCo=this.value"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Authorised signatory name</label>
+            <input type="text" value="${esc(S.clientSignatory||S.client.contact||'')}" oninput="S.clientSignatory=this.value"></div>
+          <div class="field"><label>Designation</label>
+            <input type="text" value="${esc(S.clientDesig||'')}" placeholder="e.g. Managing Director" oninput="S.clientDesig=this.value"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Registered address</label>
+            <input type="text" value="${esc(S.clientAddr||S.client.location||'')}" placeholder="Client registered address" oninput="S.clientAddr=this.value"></div>
+          <div class="field"><label>GST No.</label>
+            <input type="text" value="${esc(S.clientGST||'')}" placeholder="Client GST number" oninput="S.clientGST=this.value"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Email</label>
+            <input type="email" value="${esc(S.client.email||'')}" oninput="S.client.email=this.value"></div>
+          <div class="field"><label>Phone</label>
+            <input type="text" value="${esc(S.clientPhone||'')}" placeholder="+91 98XXXXXX00" oninput="S.clientPhone=this.value"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Proposal tone</div>
+    <div class="tgrid">
+      ${[{id:'professional',l:'Professional',d:'Formal, executive, trust-building'},{id:'consultative',l:'Consultative',d:'Advisory, ROI-focused, outcomes'},{id:'startup',l:'Startup-friendly',d:'Concise, agile, plain language'}].map(t=>`
+        <div class="tcard ${S.tone===t.id?'sel':''}" onclick="S.tone='${t.id}';render()">
+          <div class="tl">${t.l}</div><div class="td">${t.d}</div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">AI-generated proposal body <span class="badge bg">forms the narrative sections of the document</span></div>
+    <div id="propOut">
+      ${S.proposal
+        ?`<div class="propout" style="max-height:320px;overflow-y:auto"><pre>${esc(S.proposal)}</pre></div>
+           <div class="oacts">
+             <button class="btn btns btnsm" onclick="copyP()">📋 Copy text</button>
+             <button class="btn btno btnsm" onclick="genProp()">↻ Regenerate narrative</button>
+           </div>`
+        :`<div style="color:var(--text2);font-size:13px;padding:8px 0">Step 1: Generate the AI narrative — this becomes the body of your proposal document.</div>`}
+    </div>
+  </div>
+
+  <div class="navrow">
+    <button class="btn btns" onclick="goStep(3)">← Back</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btno btnlg" id="genBtn" onclick="genProp()">✨ ${S.proposal?'Regenerate':'Generate'} AI narrative</button>
+      <button class="btn btnp btnlg" onclick="buildAndShowDoc()" ${!S.proposal?'disabled title="Generate AI narrative first"':''}>📄 Build & preview document</button>
+    </div>
+  </div>`;
+}
+function copyP(){navigator.clipboard.writeText(S.proposal).then(()=>{const b=document.querySelector('.oacts .btns');if(b){b.textContent='✓ Copied!';setTimeout(()=>b.textContent='📋 Copy',2000)}})}
+
+async function genProp(){
+  if(!S.apiKey.trim()){alert('Please enter your Anthropic API key.');return}
+  const p=calcPricing(),eff=calcEffort(S.modules);
+  const plat=M.PLATFORMS.find(x=>x.id===S.platform);
+  const all=[...S.autoRes,...S.manRes];
+  addLog(`Proposal generation started: ${S.client.name}`, 'ai');
+
+  const teamBlock=all.map(r=>{
+    const hr=hrly(r.role,S.useMax),cnt=parseInt(r.count)||1,mo=parseFloat(r.months)||0;
+    return `  • ${r.role}${cnt>1?` (×${cnt})`:''}:\n    ${fmtN(r.hours||0)} hrs @ ${fmtINR(hr)}/hr → ${fmtINR((r.hours||0)*hr*cnt)} (fixed-price)\n    ${mo} months @ ${fmtINR(r.rate)}/mo → ${fmtINR(mo*(r.rate||0)*cnt)} (T&M)`;
+  }).join('\n');
+  const rateRef=Object.entries(M.RATE_CARD).map(([role,c])=>`  ${role}: CTC ${fmtINR(c.minCTC)}${c.minCTC!==c.maxCTC?'–'+fmtINR(c.maxCTC):''} → ${fmtINR(hrly(role,false))}${hrly(role,true)!==hrly(role,false)?'–'+fmtINR(hrly(role,true)):''}/hr`).join('\n');
+
+  // Build AI/Custom platform scope block if applicable
+  const isAIPlat = AI_PLATFORM_IDS.includes(S.platform);
+  const ac = S.aiConfig;
+  const aiScopeBlock = isAIPlat ? `
+AI/CUSTOM AUTOMATION SCOPE (treat this as the core technical specification):
+  Automation goal: ${ac.automationGoal||'Not specified'}
+  Problem statement: ${ac.problemStatement||'Not specified'}
+  AI capabilities: ${ac.capabilities.map(id=>AI_CAPABILITIES.find(x=>x.id===id)?.label||id).join(', ')||'Not specified'}
+  AI tools & platforms: ${[...ac.aiTools,...(ac.currentTools?[ac.currentTools]:[])].join(', ')||'To be determined'}
+  Systems to integrate: ${ac.integrations||'To be determined'}
+  Data volume: ${ac.dataVolume}
+  Deployment: ${{cloud:'Cloud (SaaS/managed)',on_premise:'On-premise (client servers)',hybrid:'Hybrid'}[ac.deploymentPref]||ac.deploymentPref}
+  Compliance/security: ${ac.complianceNeeds||'Standard'}
+  Success metrics: ${ac.successMetrics||'Not specified'}
+  Expected timeline: ${ac.expectedTimeline||'To be discussed'}
+  Deliverables/output: ${ac.outputFormat||'To be determined'}
+  Training data: ${ac.trainingData||'To be assessed'}
+  Scaling plans: ${ac.scalingPlans||'Not specified'}
+` : '';
+
+  let prompt=`Search the internet for any recent news, updates, or relevant information about the company "${S.client.name}"${S.client.website?' ('+S.client.website+')':''} in ${S.client.industry||'their industry'}.
+
+Then write a complete, winning commercial proposal from ERPion Technologies.
+
+CLIENT
+Company: ${S.client.name}
+Industry: ${S.client.industry||'Not specified'}
+Location: ${S.client.location||'India'}
+Contact: ${S.client.contact||'Decision Maker'}
+Background: ${S.scopeNotes||'Client wants to digitise and streamline operations.'}
+${S.aiIntel?.summary?'AI research insight: '+S.aiIntel.summary:''}
+
+ENGAGEMENT
+Platform: ${plat?.name}
+Modules: ${S.modules.join(', ')}
+${S.customModules?'Custom: '+S.customModules:''}
+${aiScopeBlock}
+EFFORT (${fmtN(eff.buf)} buffered hours, ~${eff.maxMo} months):
+${eff.rows.sort((a,b)=>b.hours-a.hours).map(r=>'  • '+r.role+': '+fmtN(r.hours)+' hrs / '+r.months+' months').join('\n')}
+
+TEAM & DUAL COSTING
+${teamBlock}
+
+RATE CARD
+${rateRef}
+
+FINANCIALS
+Labor: ${fmtINR(p.labor)} | Travel: ${fmtINR(p.tr)} | Licenses: ${fmtINR(p.li)} | Infra: ${fmtINR(p.inf)} | Support: ${fmtINR(p.sup)}
+Contingency ${S.extras.contingency}%: ${fmtINR(p.cont)} | TOTAL: ${fmtINR(p.total)}
+Payment: 30% signing, 40% UAT sign-off, 30% go-live. GST extra.
+
+TONE: ${S.tone==='professional'?'Formal, executive-level C-suite.':S.tone==='consultative'?'Advisory, ROI-driven, payback period.':'Concise startup-friendly.'}
+
+Write all 9 sections (~1000-1100 words). Reference any internet findings naturally.${isAIPlat?' For the Scope of Work section, describe each AI capability and automation component in detail.':''}
+1. Executive Summary (3 paras, personalised to ${S.client.name})
+2. Our Understanding of Requirements${isAIPlat?' — reference the specific automation pain points and goals':''}
+3. Proposed Solution — ${plat?.name}${isAIPlat?' — describe the AI/automation architecture and tools':''}
+4. Scope of Work (2 lines per module${isAIPlat?', plus detailed AI capability breakdown':''})
+5. Effort & Timeline (~${eff.maxMo} months, ${fmtN(eff.buf)} hours, 4 phases)
+6. Team Structure
+7. Commercial Proposal (line-item table, payment milestones, GST note)
+8. Why ERPion Technologies? (4 specific differentiators)
+9. Next Steps (time-bound CTA)`;
+
+  if(isAIPlat){
+    const goal=ac.automationGoal?ac.automationGoal.substring(0,60):'the client automation goal';
+    const metrics=ac.successMetrics||'measurable business outcomes';
+    prompt+='\n\nIMPORTANT: This is an AI/automation project, not a standard ERP. The proposal should read as an AI implementation proposal. Reference "'+goal+'" as the core problem being solved. Success metrics: "'+metrics+'".';
+  }
+  const o=document.getElementById('propOut');
+  if(o)o.innerHTML=`<div class="propout"><div class="loading"><div class="spin"></div><div class="ltxt">Crafting your proposal…</div><div class="lsub">AI is researching + writing — 25–40 seconds</div></div></div>`;
+  const btn=document.getElementById('genBtn');if(btn)btn.disabled=true;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':S.apiKey.trim(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:2500,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:prompt}]
+      })});
+    const d=await res.json();
+    const textBlock=d.content?.find(b=>b.type==='text');
+    S.proposal=d.error?'API Error: '+(d.error.message||JSON.stringify(d.error)):(textBlock?.text||'No content returned. Please retry.');
+    addLog(`Proposal generated for ${S.client.name}`, 'success');
+  }catch(e){S.proposal='Network error: '+e.message;addLog('Proposal generation failed: '+e.message,'error')}
+
+  if(o)o.innerHTML=`<div class="propout"><pre>${esc(S.proposal)}</pre></div>
+    <div class="oacts">
+      <button class="btn btns btnsm" onclick="copyP()">📋 Copy</button>
+      <button class="btn btno btnsm" onclick="genProp()">↻ Regenerate</button>
+      <button class="btn btns btnsm" onclick="window.print()">🖨 Print / PDF</button>
+    </div>`;
+  if(btn)btn.disabled=false;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROPOSAL DOCUMENT BUILDER
+═══════════════════════════════════════════════════════════ */
+function buildAndShowDoc(){
+  const html = renderProposalDoc();
+  const mount = document.getElementById('docViewerMount');
+  mount.innerHTML = `
+    <div class="doc-viewer" id="docViewer">
+      <div class="doc-toolbar">
+        <span class="doc-toolbar-title">📄 Proposal — ${esc(S.client.name)} · Ref: ${esc(S.proposalRef||'—')}</span>
+        <button class="btn btns btnsm" onclick="window.print()" style="background:none;border:1px solid #555;color:#ccc">🖨 Print / Save PDF</button>
+        <button class="btn btnd btnsm" onclick="closeDoc()" style="background:none;border:1px solid #555;color:#ccc">✕ Close</button>
+      </div>
+      <div class="doc-scroll">
+        <div class="doc-page">${html}</div>
+      </div>
+    </div>`;
+  mount.style.display='block';
+  addLog(`Document built for ${S.client.name}`, 'success');
+}
+function closeDoc(){
+  const m=document.getElementById('docViewerMount');
+  m.innerHTML=''; m.style.display='none';
+}
+
+function renderProposalDoc(){
+  const p=calcPricing(), eff=calcEffort(S.modules);
+  const plat=M.PLATFORMS.find(x=>x.id===S.platform);
+  const all=[...S.autoRes,...S.manRes];
+  const today=new Date();
+  const gstAmt=p.total*((S.gstPct||18)/100);
+  const grandTotal=p.total+gstAmt;
+
+  // Split proposal narrative into paragraphs
+  const narrativeParas=(S.proposal||'').split('\n').filter(l=>l.trim()).map(l=>`<p class="pdoc-p">${esc(l)}</p>`).join('');
+
+  // Module table rows
+  const modRows=S.modules.map(m=>{
+    const e=M.MODULE_EFFORT[m]||{h:80,cx:'medium',r:{}};
+    const bh=Math.round(e.h*1.25);
+    const mo=Math.ceil((bh/176)*10)/10;
+    return `<tr><td>${m}</td><td>${e.cx[0].toUpperCase()+e.cx.slice(1)}</td><td class="nr">${e.h} hrs</td><td class="nr">${bh} hrs</td><td class="nr">${mo} mo</td></tr>`;
+  }).join('');
+
+  // Team table rows
+  const teamRows=all.map(r=>{
+    const cnt=parseInt(r.count)||1, mo=parseFloat(r.months)||0;
+    const mcost=mo*(parseFloat(r.rate)||0)*cnt;
+    return `<tr><td>${r.role}</td><td class="nr">${fmtN(r.hours||0)} hrs</td><td class="nr">${mo} mo</td><td class="nr">${cnt}</td><td class="nr">${fmtINR(parseFloat(r.rate)||0)}/mo</td><td class="nr">${fmtINR(mcost)}</td></tr>`;
+  }).join('');
+
+  // Cost table
+  const costRows=[
+    {l:'Implementation labor',v:p.labor},
+    {l:'Travel & on-site expenses',v:p.tr},
+    {l:'Software / platform licenses',v:p.li},
+    {l:'Infrastructure & cloud hosting',v:p.inf},
+    {l:'Post go-live support retainer',v:p.sup},
+    {l:'Subtotal',v:p.sub,bold:true},
+    {l:`Contingency (${S.extras.contingency}%)`,v:p.cont},
+    {l:'Total (excl. GST)',v:p.total,bold:true},
+    {l:`GST @ ${S.gstPct||18}%`,v:gstAmt},
+  ].map(r=>`<tr><td ${r.bold?'style="font-weight:700"':''}>${r.l}</td><td class="nr" ${r.bold?'style="font-weight:700"':''}>${fmtINR(r.v)}</td></tr>`).join('');
+
+  // Payment schedule
+  const milestones=[
+    {label:'On contract signing',pct:30},
+    {label:'Mid-project — UAT milestone sign-off',pct:40},
+    {label:'Go-live acceptance & handover',pct:30},
+  ].map(m=>`<tr><td>${m.label}</td><td class="nr">${m.pct}%</td><td class="nr">${fmtINR(p.total*m.pct/100)}</td></tr>`).join('');
+
+  const TNC = getTnC();
+
+  return `
+<div class="pdoc">
+  <!-- COVER PAGE -->
+  <div class="pdoc-cover">
+    <div class="pdoc-logo-bar">
+      <div>
+        <div class="pdoc-logo-name">${esc(S.erpionCo||'ERPion Technologies Pvt Ltd')}</div>
+        <div class="pdoc-logo-tag">ERP · AI Automation · Digital Transformation</div>
+      </div>
+      <div class="pdoc-ref" style="text-align:right;font-size:9pt;color:#6b7280">
+        Ref: <strong>${esc(S.proposalRef||'—')}</strong><br>
+        Date: ${esc(S.proposalDate||today.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}))}<br>
+        Valid: ${esc(S.validUntil||'30 days from date')}
+      </div>
+    </div>
+    <div class="pdoc-label">Proposal for</div>
+    <div class="pdoc-client">${esc(S.clientCo||S.client.name||'Client')}</div>
+    <div class="pdoc-subtitle">${plat?.name} Implementation${S.modules.length?' — '+S.modules.slice(0,3).join(', ')+(S.modules.length>3?' & more':''):''}</div>
+    <div class="pdoc-meta">
+      <div class="pdoc-mc"><div class="pdoc-ml">Prepared for</div><div class="pdoc-mv">${esc(S.clientSignatory||S.client.contact||'—')}, ${esc(S.clientDesig||'Decision Maker')}</div></div>
+      <div class="pdoc-mc"><div class="pdoc-ml">Prepared by</div><div class="pdoc-mv">${esc(S.erpionSignatory||'ERPion Team')}, ${esc(S.erpionDesig||'Director')}</div></div>
+      <div class="pdoc-mc"><div class="pdoc-ml">Total engagement value</div><div class="pdoc-mv" style="color:#1D9E75">${fmtINR(p.total)} + GST</div></div>
+      <div class="pdoc-mc"><div class="pdoc-ml">Project duration</div><div class="pdoc-mv">~${eff.maxMo} months · ${fmtN(eff.buf)} hours</div></div>
+      <div class="pdoc-mc"><div class="pdoc-ml">Platform</div><div class="pdoc-mv">${plat?.name||'—'}</div></div>
+      <div class="pdoc-mc"><div class="pdoc-ml">Modules</div><div class="pdoc-mv">${S.modules.length} modules selected</div></div>
+    </div>
+    <div class="pdoc-confid">⚠ CONFIDENTIAL — This proposal is prepared exclusively for ${esc(S.clientCo||S.client.name||'the client')} and may not be shared with third parties without written consent from ${esc(S.erpionCo||'ERPion Technologies')}.</div>
+  </div>
+
+  <!-- BODY — AI NARRATIVE -->
+  <div class="pdoc-body">
+    <div class="pdoc-sec">${narrativeParas}</div>
+
+    <!-- MODULE TABLE -->
+    <div class="pdoc-sec">
+      <div class="pdoc-h1">Scope of Implementation — Modules</div>
+      <table class="pdoc-tbl">
+        <thead><tr><th>Module</th><th>Complexity</th><th>Base hrs</th><th>Buffered hrs</th><th>Duration</th></tr></thead>
+        <tbody>${modRows}</tbody>
+        <tfoot><tr><td><strong>Total</strong></td><td></td><td class="nr"><strong>${fmtN(eff.raw)} hrs</strong></td><td class="nr"><strong>${fmtN(eff.buf)} hrs</strong></td><td class="nr"><strong>~${eff.maxMo} mo</strong></td></tr></tfoot>
+      </table>
+      ${S.customModules?`<div class="pdoc-hl"><strong>Additional custom requirements:</strong> ${esc(S.customModules)}</div>`:''}
+    </div>
+
+    <!-- TEAM TABLE -->
+    <div class="pdoc-sec">
+      <div class="pdoc-h1">Proposed Team Structure</div>
+      <table class="pdoc-tbl">
+        <thead><tr><th>Role</th><th class="nr">Effort (hrs)</th><th class="nr">Duration</th><th class="nr">Count</th><th class="nr">Monthly rate</th><th class="nr">Cost</th></tr></thead>
+        <tbody>${teamRows}</tbody>
+        <tfoot><tr><td colspan="5"><strong>Total labor</strong></td><td class="nr"><strong>${fmtINR(p.labor)}</strong></td></tr></tfoot>
+      </table>
+    </div>
+
+    <!-- COST TABLE -->
+    <div class="pdoc-sec">
+      <div class="pdoc-h1">Commercial Summary</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <table class="pdoc-tbl">
+            <thead><tr><th>Cost component</th><th class="nr">Amount</th></tr></thead>
+            <tbody>${costRows}</tbody>
+            <tfoot><tr><td><strong>Grand total (incl. GST @ ${S.gstPct||18}%)</strong></td><td class="nr"><strong>${fmtINR(grandTotal)}</strong></td></tr></tfoot>
+          </table>
+        </div>
+        <div>
+          <div class="pdoc-h2">Payment schedule</div>
+          <table class="pdoc-tbl">
+            <thead><tr><th>Milestone</th><th class="nr">%</th><th class="nr">Amount</th></tr></thead>
+            <tbody>${milestones}</tbody>
+          </table>
+          <div style="font-size:9pt;color:#6b7280;margin-top:8px">• All amounts in Indian Rupees (INR)<br>• GST @ ${S.gstPct||18}% applicable as per prevailing rate<br>• Payment due within 7 working days of milestone<br>• Cheque / NEFT / RTGS / UPI accepted</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMS & CONDITIONS -->
+  <div class="pdoc-tnc">
+    <div class="pdoc-tnc-h">Terms & Conditions</div>
+    ${TNC.map(t=>`
+    <div class="pdoc-tnc-sec">
+      <div class="pdoc-tnc-t">${t.title}</div>
+      <div class="pdoc-tnc-b">${t.body}</div>
+    </div>`).join('')}
+  </div>
+
+  <!-- SIGNING PAGE -->
+  <div class="pdoc-sign">
+    <div class="pdoc-sign-h">Agreement & Authorised Signatures</div>
+    <p style="font-size:10pt;margin-bottom:20px;color:#374151">This Proposal Agreement ("Agreement") is entered into between the parties named below. By signing, both parties acknowledge that they have read, understood, and agree to all the terms and conditions set forth in this proposal document, including its schedules and annexures.</p>
+    <div class="pdoc-sign-grid">
+      <div class="pdoc-sign-blk">
+        <div class="pdoc-sign-co">${esc(S.erpionCo||'ERPion Technologies Pvt Ltd')}</div>
+        <div class="pdoc-sign-role">Service Provider</div>
+        ${S.erpionAddr?`<div style="font-size:9pt;color:#6b7280;margin-bottom:12px">${esc(S.erpionAddr)}</div>`:''}
+        ${S.erpionGST?`<div style="font-size:9pt;color:#6b7280;margin-bottom:12px">GSTIN: ${esc(S.erpionGST)}</div>`:''}
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Authorised signatory</div><div class="pdoc-sign-val">${esc(S.erpionSignatory||'')}</div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Designation</div><div class="pdoc-sign-val">${esc(S.erpionDesig||'Director / CEO')}</div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Signature</div><div class="pdoc-sign-val" style="min-height:44px"></div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Date</div><div class="pdoc-sign-val"></div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Official stamp / seal</div><div class="pdoc-sign-val" style="min-height:60px"></div></div>
+      </div>
+      <div class="pdoc-sign-blk">
+        <div class="pdoc-sign-co">${esc(S.clientCo||S.client.name||'Client Company')}</div>
+        <div class="pdoc-sign-role">Client / Buyer</div>
+        ${S.clientAddr?`<div style="font-size:9pt;color:#6b7280;margin-bottom:12px">${esc(S.clientAddr)}</div>`:''}
+        ${S.clientGST?`<div style="font-size:9pt;color:#6b7280;margin-bottom:12px">GSTIN: ${esc(S.clientGST)}</div>`:''}
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Authorised signatory</div><div class="pdoc-sign-val">${esc(S.clientSignatory||S.client.contact||'')}</div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Designation</div><div class="pdoc-sign-val">${esc(S.clientDesig||'')}</div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Signature</div><div class="pdoc-sign-val" style="min-height:44px"></div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Date</div><div class="pdoc-sign-val"></div></div>
+        <div class="pdoc-sign-row"><div class="pdoc-sign-lbl">Official stamp / seal</div><div class="pdoc-sign-val" style="min-height:60px"></div></div>
+      </div>
+    </div>
+    <div class="pdoc-sign-warn">Both parties acknowledge that electronic / digital signatures are equally valid as physical signatures under the Information Technology Act, 2000 (India).</div>
+  </div>
+
+  <div class="pdoc-foot">
+    ${esc(S.erpionCo||'ERPion Technologies Pvt Ltd')} · ${esc(S.erpionAddr||'')} · ${esc(S.erpionEmail||'')} · ${esc(S.erpionPhone||'')}
+    <br>Proposal Ref: ${esc(S.proposalRef||'—')} · Generated on ${today.toLocaleDateString('en-IN')} · Confidential
+  </div>
+</div>`;
+}
+
+/* ═══ TERMS & CONDITIONS — Indian Market Standard ═══ */
+function getTnC(){
+  const co=S.erpionCo||'ERPion Technologies Pvt Ltd';
+  const client=S.clientCo||S.client.name||'the Client';
+  const gst=S.gstPct||18;
+  return [
+    {title:'1. Definitions',body:`<ul>
+      <li><strong>"Service Provider"</strong> refers to ${co}, duly incorporated under the Companies Act, 2013.</li>
+      <li><strong>"Client"</strong> refers to ${client}.</li>
+      <li><strong>"Services"</strong> means ERP implementation, software configuration, customisation, training, and related professional services described in this proposal.</li>
+      <li><strong>"Deliverables"</strong> means the software, configurations, documentation, and other outputs produced under this engagement.</li>
+      <li><strong>"Go-live"</strong> means the date on which the implemented system is placed into production use by the Client.</li>
+    </ul>`},
+    {title:'2. Scope of Work',body:`<ol>
+      <li>The scope is limited to the modules, platforms, and deliverables listed in this proposal. Any additional features or modules not mentioned herein shall require a separate written Change Order (CO) and additional commercial terms.</li>
+      <li>Any changes to the scope requested by the Client after project initiation shall follow a formal Change Request (CR) process. CRs may result in additional cost and revised timelines, to be agreed in writing by both parties.</li>
+      <li>The Service Provider shall not be responsible for integrations, APIs, or third-party software not explicitly mentioned in the Scope of Work.</li>
+    </ol>`},
+    {title:'3. Payment Terms',body:`<ol>
+      <li>Payment shall be made as per the milestone schedule stated in the Commercial Summary of this proposal.</li>
+      <li>All invoices are due and payable within <strong>7 (seven) working days</strong> of the invoice date.</li>
+      <li>In the event of delayed payment beyond 7 working days, the Service Provider reserves the right to charge interest at <strong>18% per annum</strong> (1.5% per month) on the outstanding amount, calculated from the due date.</li>
+      <li>The Service Provider may suspend services if payment remains outstanding for more than 15 days without written justification from the Client.</li>
+      <li>All amounts are in Indian Rupees (INR). Goods and Services Tax (GST) at ${gst}% or the applicable prevailing rate shall be charged over and above the mentioned amounts.</li>
+      <li>TDS deductions (if applicable) shall be communicated to the Service Provider along with proof of deposit, and the TDS certificate shall be provided within the statutory period.</li>
+    </ol>`},
+    {title:'4. Project Timeline & Delays',body:`<ol>
+      <li>Project timelines are estimates based on the agreed scope and subject to timely availability of Client-side resources, data, access, and sign-offs.</li>
+      <li>Delays caused by the Client (including delayed data provision, feedback, UAT sign-offs, or unavailability of key personnel) shall not be attributed to the Service Provider, and may result in timeline extensions at no additional cost.</li>
+      <li>The Service Provider shall notify the Client in writing within 5 working days of identifying any risk to the project timeline.</li>
+    </ol>`},
+    {title:'5. Client Responsibilities',body:`<ol>
+      <li>The Client shall designate a Project Coordinator with adequate authority to make decisions, provide approvals, and coordinate internally.</li>
+      <li>The Client shall make available all necessary data, legacy system access, hardware, infrastructure, and personnel as required by the Service Provider for timely delivery.</li>
+      <li>The Client shall participate in User Acceptance Testing (UAT) and provide written sign-off within 5 working days of UAT completion. Failure to respond shall be deemed acceptance.</li>
+      <li>The Client shall ensure adequate internet connectivity, server access, and operational environment required for deployment.</li>
+    </ol>`},
+    {title:'6. Intellectual Property',body:`<ol>
+      <li>All standard software, frameworks, tools, and pre-built components used by the Service Provider remain the intellectual property of the Service Provider or respective third-party licensors.</li>
+      <li>Custom code, configurations, and deliverables developed exclusively for the Client under this engagement shall be transferred to the Client upon receipt of full payment.</li>
+      <li>The Client shall not reverse-engineer, resell, sublicense, or distribute any software or component developed under this engagement without prior written consent from the Service Provider.</li>
+      <li>Open-source components used are subject to their respective open-source licenses (MIT, LGPL, Apache, etc.).</li>
+    </ol>`},
+    {title:'7. Confidentiality',body:`<ol>
+      <li>Both parties agree to keep confidential all proprietary information, trade secrets, business processes, financial data, and technical information shared during the course of this engagement.</li>
+      <li>Confidential information shall not be disclosed to any third party without prior written consent, except where required by law or regulatory authority.</li>
+      <li>This confidentiality obligation shall survive the termination or completion of this Agreement for a period of <strong>3 (three) years</strong>.</li>
+    </ol>`},
+    {title:'8. Data Privacy & Security',body:`<ol>
+      <li>The Service Provider shall handle all Client data in compliance with applicable Indian data protection laws, including the Digital Personal Data Protection Act, 2023 (DPDPA).</li>
+      <li>Client data shall be used solely for the purposes of this engagement and shall not be shared, sold, or used for any other purpose.</li>
+      <li>The Service Provider shall implement reasonable technical and organisational security measures to protect Client data from unauthorised access, disclosure, or loss.</li>
+      <li>In the event of a data breach, the Service Provider shall notify the Client within 72 hours of becoming aware of the breach.</li>
+    </ol>`},
+    {title:'9. Warranties & Representations',body:`<ol>
+      <li>The Service Provider warrants that the Services will be performed in a professional and workmanlike manner by qualified personnel.</li>
+      <li>Post go-live, the Service Provider shall provide a <strong>30-day warranty period</strong> during which defects in the delivered software (limited to bugs and configuration errors within the agreed scope) shall be rectified at no additional charge.</li>
+      <li>The warranty does not cover issues arising from Client modifications, incorrect use, or changes in third-party software.</li>
+      <li>THERE ARE NO OTHER WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, BEYOND THOSE EXPRESSLY STATED HEREIN.</li>
+    </ol>`},
+    {title:'10. Limitation of Liability',body:`<ol>
+      <li>The Service Provider's total liability under this Agreement shall not exceed the total fees paid by the Client in the preceding 3 months under this Agreement.</li>
+      <li>Neither party shall be liable for any indirect, incidental, consequential, special, or punitive damages, including but not limited to loss of profits, revenue, or business opportunities.</li>
+      <li>The Service Provider shall not be liable for any downtime, data loss, or business disruption resulting from third-party software, platform failures, or Client infrastructure issues.</li>
+    </ol>`},
+    {title:'11. Termination',body:`<ol>
+      <li>Either party may terminate this Agreement by giving <strong>30 (thirty) days' written notice</strong> to the other party.</li>
+      <li>In the event of termination, the Client shall pay for all work completed and expenses incurred up to the date of termination.</li>
+      <li>The Service Provider may terminate immediately (without notice) in case of material breach by the Client, including non-payment beyond 30 days.</li>
+      <li>Upon termination, each party shall return or destroy confidential materials belonging to the other party.</li>
+    </ol>`},
+    {title:'12. Force Majeure',body:`The Service Provider shall not be liable for any delay or failure to perform its obligations under this Agreement if such delay or failure is caused by events beyond its reasonable control, including but not limited to: acts of God, natural disasters, pandemic, civil unrest, government orders, internet disruptions, or power failures. The Service Provider shall notify the Client promptly of such events.`},
+    {title:'13. Dispute Resolution & Governing Law',body:`<ol>
+      <li>The parties shall first attempt to resolve any dispute amicably through good-faith negotiation within <strong>15 working days</strong> of the dispute arising.</li>
+      <li>If unresolved, disputes shall be referred to arbitration under the <strong>Arbitration and Conciliation Act, 1996 (India)</strong>, with a sole arbitrator mutually agreed upon by both parties.</li>
+      <li>This Agreement shall be governed by and construed in accordance with the laws of <strong>India</strong>, and the courts of <strong>Pune, Maharashtra</strong> shall have exclusive jurisdiction for any legal proceedings.</li>
+    </ol>`},
+    {title:'14. General',body:`<ol>
+      <li><strong>Entire Agreement:</strong> This proposal, once accepted, constitutes the entire agreement between the parties and supersedes all prior negotiations, representations, or agreements.</li>
+      <li><strong>Amendments:</strong> Any amendment to this Agreement must be in writing and signed by authorised representatives of both parties.</li>
+      <li><strong>Severability:</strong> If any provision of this Agreement is found invalid or unenforceable, the remaining provisions shall continue in full force and effect.</li>
+      <li><strong>Waiver:</strong> Failure by either party to enforce any provision shall not constitute a waiver of that party's rights.</li>
+      <li><strong>Notices:</strong> All notices must be in writing and delivered by email with read-receipt or registered post to the addresses stated in this Agreement.</li>
+      <li><strong>Counterparts:</strong> This Agreement may be executed in counterparts, including electronic copies, each of which shall be deemed an original.</li>
+    </ol>`},
+  ];
+}
+function render(){
+  renderSidebar();
+  const panels=[renderStep0,renderStep1,renderStep2,renderStep3,renderStep4];
+  document.getElementById('mainContent').innerHTML=panels[S.step]();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN PANEL
+═══════════════════════════════════════════════════════════ */
+const ADMIN_SECTIONS=[
+  {id:'dashboard', label:'Dashboard',    icon:'📊'},
+  {id:'platforms', label:'Platforms',    icon:'🧩'},
+  {id:'modules',   label:'Modules',      icon:'📦'},
+  {id:'resources', label:'Resources',    icon:'👥'},
+  {id:'rates',     label:'CTC & Rates',  icon:'💰'},
+  {id:'aifeed',    label:'AI Feed',      icon:'🌐'},
+  {id:'log',       label:'Activity log', icon:'📋'},
+];
+
+function renderAdminNav(){
+  document.getElementById('adminNav').innerHTML=ADMIN_SECTIONS.map(s=>`
+    <div class="nav-item admin-nav ${adminSection===s.id?'active':''}" onclick="adminSection='${s.id}';renderAdmin()">
+      <span class="nav-num">${s.icon}</span><span>${s.label}</span>
+    </div>`).join('');
+}
+
+function renderAdmin(){
+  renderAdminNav();
+  const panels={
+    dashboard:renderAdminDashboard,
+    platforms:renderAdminPlatforms,
+    modules:renderAdminModules,
+    resources:renderAdminResources,
+    rates:renderAdminRates,
+    aifeed:renderAdminAIFeed,
+    log:renderAdminLog,
+  };
+  document.getElementById('adminContent').innerHTML=(panels[adminSection]||renderAdminDashboard)();
+}
+
+/* ── DASHBOARD ── */
+function renderAdminDashboard(){
+  const totalMods=Object.values(M.PLATFORM_MODS).reduce((s,m)=>s+m.length,0);
+  const activePlats=M.PLATFORMS.filter(p=>p.active).length;
+  const roles=Object.keys(M.RATE_CARD).length;
+  const totalH=Object.values(M.MODULE_EFFORT).reduce((s,e)=>s+e.h,0);
+  return `
+  <div class="ph-admin">
+    <div>
+      <h2>Admin Dashboard</h2>
+      <p>Manage masters that power the Proposal Builder. All changes apply instantly.</p>
+    </div>
+    <button class="btn btna btnsm" onclick="resetToDefaults()" style="margin-left:auto">↺ Reset all to defaults</button>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val">${activePlats}</div><div class="stat-lbl">Active platforms</div><div class="stat-sub">of ${M.PLATFORMS.length} total</div></div>
+    <div class="stat-card"><div class="stat-val">${totalMods}</div><div class="stat-lbl">Total modules</div><div class="stat-sub">across all platforms</div></div>
+    <div class="stat-card"><div class="stat-val">${roles}</div><div class="stat-lbl">Resource roles</div><div class="stat-sub">with CTC rates</div></div>
+    <div class="stat-card"><div class="stat-val">${fmtN(totalH)}</div><div class="stat-lbl">Total base hours</div><div class="stat-sub">across all modules</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card">
+      <div class="card-title">Platform health</div>
+      ${M.PLATFORMS.map(p=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span>${p.icon}</span>
+            <div><div style="font-size:13px;font-weight:500">${p.name}</div>
+            <div style="font-size:11px;color:var(--text2)">${(M.PLATFORM_MODS[p.id]||[]).length} modules</div></div>
+          </div>
+          <span class="badge ${p.active?'bg':'br'}">${p.active?'Active':'Inactive'}</span>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Rate card snapshot</div>
+      ${Object.entries(M.RATE_CARD).map(([role,c])=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:500">${role}</div>
+          <div style="text-align:right">
+            <div style="font-size:12px;color:var(--gd);font-weight:600">${fmtINR(hrly(role,false))}–${fmtINR(hrly(role,true))}/hr</div>
+            <div style="font-size:10px;color:var(--text2)">${fmtINR(c.minCTC)}${c.minCTC!==c.maxCTC?'–'+fmtINR(c.maxCTC):''} CTC</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+function resetToDefaults(){
+  if(!confirm('Reset all masters to factory defaults? This cannot be undone.')) return;
+  M={
+    RATE_CARD:JSON.parse(JSON.stringify(DEFAULT_RATE_CARD)),
+    PLATFORMS:JSON.parse(JSON.stringify(DEFAULT_PLATFORMS)),
+    PLATFORM_MODS:JSON.parse(JSON.stringify(DEFAULT_MODULES)),
+    MODULE_EFFORT:JSON.parse(JSON.stringify(DEFAULT_MODULE_EFFORT)),
+  };
+  saveMasters();
+  addLog('All masters reset to defaults','warn');
+  renderAdmin();
+}
+
+/* ── PLATFORMS ADMIN ── */
+function renderAdminPlatforms(){
+  return `
+  <div class="ph-admin">
+    <div><h2>Platforms</h2><p>Add, edit, or deactivate ERP platforms shown in the Proposal Builder.</p></div>
+    <button class="btn btnp btnsm" onclick="showAddPlatform()">+ Add platform</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="admin-tbl">
+      <thead><tr><th style="width:50px">Icon</th><th>Name</th><th>Description</th><th>Modules</th><th>Status</th><th style="width:120px">Actions</th></tr></thead>
+      <tbody>
+        ${M.PLATFORMS.map((p,i)=>`
+          <tr>
+            <td style="font-size:22px;text-align:center">${p.icon}</td>
+            <td><strong>${p.name}</strong></td>
+            <td style="color:var(--text2)">${p.desc}</td>
+            <td>${(M.PLATFORM_MODS[p.id]||[]).length} modules</td>
+            <td><span class="badge ${p.active?'bg':'br'}">${p.active?'Active':'Inactive'}</span></td>
+            <td><div class="action-btns">
+              <button class="btn btns btnsm" onclick="editPlatform(${i})">Edit</button>
+              <button class="btn ${p.active?'btnd':'btnp'} btnsm" onclick="togglePlatform(${i})">${p.active?'Hide':'Show'}</button>
+            </div></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function showAddPlatform(){
+  showModal(`
+    <h3>Add platform <button class="modal-close" onclick="closeModal()">×</button></h3>
+    <div class="fg fg2">
+      <div class="field"><label>Name</label><input type="text" id="m-pname" placeholder="Salesforce"></div>
+      <div class="field"><label>Icon (emoji)</label><input type="text" id="m-picon" placeholder="☁️" style="font-size:20px"></div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Description</label><input type="text" id="m-pdesc" placeholder="CRM & cloud platform"></div>
+    <div class="field"><label>Platform ID (no spaces, lowercase)</label><input type="text" id="m-pid" placeholder="salesforce"></div>
+    <div class="modal-footer">
+      <button class="btn btns" onclick="closeModal()">Cancel</button>
+      <button class="btn btnp" onclick="addPlatform()">Add platform</button>
+    </div>`);
+}
+function addPlatform(){
+  const name=document.getElementById('m-pname').value.trim();
+  const icon=document.getElementById('m-picon').value.trim()||'🔧';
+  const desc=document.getElementById('m-pdesc').value.trim();
+  const id=document.getElementById('m-pid').value.trim().toLowerCase().replace(/\s+/g,'');
+  if(!name||!id){alert('Name and ID required');return}
+  if(M.PLATFORMS.find(p=>p.id===id)){alert('Platform ID already exists');return}
+  M.PLATFORMS.push({id,name,icon,desc,active:true});
+  M.PLATFORM_MODS[id]=[];
+  saveMasters(); closeModal(); renderAdmin();
+}
+function editPlatform(i){
+  const p=M.PLATFORMS[i];
+  showModal(`
+    <h3>Edit platform <button class="modal-close" onclick="closeModal()">×</button></h3>
+    <div class="fg fg2">
+      <div class="field"><label>Name</label><input type="text" id="ep-name" value="${esc(p.name)}"></div>
+      <div class="field"><label>Icon (emoji)</label><input type="text" id="ep-icon" value="${esc(p.icon)}" style="font-size:20px"></div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Description</label><input type="text" id="ep-desc" value="${esc(p.desc)}"></div>
+    <div class="modal-footer">
+      <button class="btn btns" onclick="closeModal()">Cancel</button>
+      <button class="btn btnd btnsm" onclick="deletePlatform(${i})">Delete</button>
+      <button class="btn btnp" onclick="savePlatform(${i})">Save</button>
+    </div>`);
+}
+function savePlatform(i){
+  M.PLATFORMS[i].name=document.getElementById('ep-name').value.trim();
+  M.PLATFORMS[i].icon=document.getElementById('ep-icon').value.trim();
+  M.PLATFORMS[i].desc=document.getElementById('ep-desc').value.trim();
+  saveMasters(); closeModal(); renderAdmin();
+}
+function deletePlatform(i){
+  if(!confirm('Delete this platform?')) return;
+  const id=M.PLATFORMS[i].id;
+  M.PLATFORMS.splice(i,1);
+  delete M.PLATFORM_MODS[id];
+  saveMasters(); closeModal(); renderAdmin();
+}
+function togglePlatform(i){M.PLATFORMS[i].active=!M.PLATFORMS[i].active;saveMasters();renderAdmin()}
+
+/* ── MODULES ADMIN ── */
+let selectedPlatformAdmin = M.PLATFORMS[0]?.id||'erpnext';
+function renderAdminModules(){
+  const plat=M.PLATFORMS.find(p=>p.id===selectedPlatformAdmin);
+  const mods=M.PLATFORM_MODS[selectedPlatformAdmin]||[];
+  return `
+  <div class="ph-admin">
+    <div><h2>Modules</h2><p>Manage modules per platform. Set effort hours, complexity and required roles.</p></div>
+    <button class="btn btnp btnsm" onclick="showAddModule()">+ Add module</button>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    ${M.PLATFORMS.map(p=>`<button class="btn ${selectedPlatformAdmin===p.id?'btnp':'btns'} btnsm" onclick="selectedPlatformAdmin='${p.id}';renderAdmin()">${p.icon} ${p.name}</button>`).join('')}
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <strong style="font-size:13px">${plat?.name} — ${mods.length} modules</strong>
+      <button class="btn btna btnsm" onclick="showAddModuleToPlat('${selectedPlatformAdmin}')">+ Add to this platform</button>
+    </div>
+    <table class="admin-tbl">
+      <thead><tr><th>Module name</th><th>Base hours</th><th>Complexity</th><th>Primary roles</th><th style="width:100px">Actions</th></tr></thead>
+      <tbody>
+        ${mods.map((m,i)=>{
+          const e=M.MODULE_EFFORT[m]||{h:80,cx:'medium',r:{}};
+          return `<tr>
+            <td><strong>${m}</strong></td>
+            <td>${e.h} hrs</td>
+            <td><span class="badge ${e.cx==='high'?'br':e.cx==='medium'?'ba':'bg'}">${e.cx}</span></td>
+            <td style="font-size:11px;color:var(--text2)">${Object.keys(e.r).join(', ')}</td>
+            <td><div class="action-btns">
+              <button class="btn btns btnsm" onclick="editModule('${m}','${selectedPlatformAdmin}',${i})">Edit</button>
+              <button class="btn btnd btnsm" onclick="removeModFromPlat('${selectedPlatformAdmin}',${i})">Remove</button>
+            </div></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function showAddModuleToPlat(pid){
+  const allModNames=Object.keys(M.MODULE_EFFORT);
+  const existing=M.PLATFORM_MODS[pid]||[];
+  const available=allModNames.filter(m=>!existing.includes(m));
+  showModal(`
+    <h3>Add module to platform <button class="modal-close" onclick="closeModal()">×</button></h3>
+    <div class="field" style="margin-bottom:12px"><label>Select existing module</label>
+      <select id="m-selmod"><option value="">— pick a module —</option>${available.map(m=>`<option>${m}</option>`).join('')}</select>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Or create a new module below:</div>
+    <div class="fg fg2">
+      <div class="field"><label>New module name</label><input type="text" id="m-newmod" placeholder="Custom Reports"></div>
+      <div class="field"><label>Base hours</label><input type="number" id="m-hrs" value="80" min="10"></div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Complexity</label>
+      <select id="m-cx"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btns" onclick="closeModal()">Cancel</button>
+      <button class="btn btnp" onclick="addModuleToPlat('${pid}')">Add</button>
+    </div>`);
+}
+function addModuleToPlat(pid){
+  const sel=document.getElementById('m-selmod').value;
+  const newName=document.getElementById('m-newmod').value.trim();
+  const hrs=parseInt(document.getElementById('m-hrs').value)||80;
+  const cx=document.getElementById('m-cx').value;
+  const name=sel||newName;
+  if(!name){alert('Select or enter a module name');return}
+  if(!M.PLATFORM_MODS[pid]) M.PLATFORM_MODS[pid]=[];
+  if(!M.PLATFORM_MODS[pid].includes(name)) M.PLATFORM_MODS[pid].push(name);
+  if(!M.MODULE_EFFORT[name]) M.MODULE_EFFORT[name]={h:hrs,cx,r:{'Senior Developer':Math.round(hrs*0.6),'QA Engineer':Math.round(hrs*0.15)}};
+  saveMasters(); closeModal(); renderAdmin();
+}
+function removeModFromPlat(pid,i){
+  if(!confirm('Remove module from this platform?')) return;
+  M.PLATFORM_MODS[pid].splice(i,1);
+  saveMasters(); renderAdmin();
+}
+function showAddModule(){
+  showModal(`
+    <h3>Create new module <button class="modal-close" onclick="closeModal()">×</button></h3>
+    <div class="fg fg2">
+      <div class="field"><label>Module name *</label><input type="text" id="nm-name" placeholder="GST Reporting"></div>
+      <div class="field"><label>Base hours *</label><input type="number" id="nm-hrs" value="80" min="10"></div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Complexity</label>
+      <select id="nm-cx"><option value="low">Low (simple, <60 hrs)</option><option value="medium" selected>Medium</option><option value="high">High (complex, >100 hrs)</option></select>
+    </div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">Role hours (must sum to base hours):</div>
+    <div id="nm-roles">${Object.keys(M.RATE_CARD).map(r=>`
+      <div class="fg fg2" style="margin-bottom:6px">
+        <div class="field"><label style="font-size:11px">${r}</label></div>
+        <input type="number" id="nmr-${r.replace(/\s/g,'_')}" value="0" min="0" style="width:80px;padding:5px 8px">
+      </div>`).join('')}</div>
+    <div class="modal-footer">
+      <button class="btn btns" onclick="closeModal()">Cancel</button>
+      <button class="btn btnp" onclick="createNewModule()">Create module</button>
+    </div>`);
+}
+function createNewModule(){
+  const name=document.getElementById('nm-name').value.trim();
+  const hrs=parseInt(document.getElementById('nm-hrs').value)||80;
+  const cx=document.getElementById('nm-cx').value;
+  if(!name){alert('Module name required');return}
+  const roleHrs={};
+  Object.keys(M.RATE_CARD).forEach(r=>{
+    const v=parseInt(document.getElementById('nmr-'+r.replace(/\s/g,'_'))?.value)||0;
+    if(v>0) roleHrs[r]=v;
+  });
+  if(!Object.keys(roleHrs).length) {roleHrs['Senior Developer']=Math.round(hrs*0.6);roleHrs['QA Engineer']=Math.round(hrs*0.15);}
+  M.MODULE_EFFORT[name]={h:hrs,cx,r:roleHrs};
+  saveMasters(); closeModal(); renderAdmin();
+}
+function editModule(name, pid, idx){
+  const e=M.MODULE_EFFORT[name]||{h:80,cx:'medium',r:{}};
+  showModal(`
+    <h3>Edit module: ${esc(name)} <button class="modal-close" onclick="closeModal()">×</button></h3>
+    <div class="fg fg2">
+      <div class="field"><label>Base hours</label><input type="number" id="em-hrs" value="${e.h}" min="10"></div>
+      <div class="field"><label>Complexity</label>
+        <select id="em-cx"><option value="low" ${e.cx==='low'?'selected':''}>Low</option><option value="medium" ${e.cx==='medium'?'selected':''}>Medium</option><option value="high" ${e.cx==='high'?'selected':''}>High</option></select>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">Role hour allocation:</div>
+    ${Object.keys(M.RATE_CARD).map(r=>`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <label style="font-size:12px;flex:1">${r}</label>
+        <input type="number" id="emr-${r.replace(/\s/g,'_')}" value="${e.r[r]||0}" min="0" style="width:80px;padding:5px 8px">
+      </div>`).join('')}
+    <div class="modal-footer">
+      <button class="btn btns" onclick="closeModal()">Cancel</button>
+      <button class="btn btnp" onclick="saveModuleEdit('${name}')">Save changes</button>
+    </div>`);
+}
+function saveModuleEdit(name){
+  const hrs=parseInt(document.getElementById('em-hrs').value)||80;
+  const cx=document.getElementById('em-cx').value;
+  const roleHrs={};
+  Object.keys(M.RATE_CARD).forEach(r=>{
+    const v=parseInt(document.getElementById('emr-'+r.replace(/\s/g,'_'))?.value)||0;
+    if(v>0) roleHrs[r]=v;
+  });
+  M.MODULE_EFFORT[name]={h:hrs,cx,r:roleHrs};
+  saveMasters(); closeModal(); renderAdmin();
+  addLog(`Module edited: ${name}`, 'edit');
+}
+
+/* ── RESOURCES ADMIN ── */
+function renderAdminResources(){
+  return `
+  <div class="ph-admin">
+    <div><h2>Resources</h2><p>Manage roles available in the Proposal Builder team allocation.</p></div>
+    <button class="btn btnp btnsm" onclick="showAddRole()">+ Add role</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="admin-tbl">
+      <thead><tr><th>Role title</th><th>Min CTC/mo</th><th>Max CTC/mo</th><th>Billable %</th><th>Overhead</th><th>Hourly rate (derived)</th><th style="width:80px">Actions</th></tr></thead>
+      <tbody>
+        ${Object.entries(M.RATE_CARD).map(([role,c],i)=>`
+          <tr>
+            <td><strong>${role}</strong></td>
+            <td>${fmtINR(c.minCTC)}</td>
+            <td>${fmtINR(c.maxCTC)}</td>
+            <td>${Math.round(c.billable*100)}%</td>
+            <td>${c.overhead}×</td>
+            <td><span style="color:var(--gd);font-weight:600">${fmtINR(hrly(role,false))}–${fmtINR(hrly(role,true))}/hr</span></td>
+            <td><div class="action-btns">
+              <button class="btn btns btnsm" onclick="editRole('${role}')">Edit</button>
+            </div></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div class="tip" style="margin-top:8px">Formula: Hourly = (CTC × overhead) ÷ (176 hrs × billable%). Overhead covers PF, ESIC, gratuity, office & tools.</div>`;
+}
+function showAddRole(){
+  showModal(`
+    <h3>Add role <button class="modal-close" onclick="closeModal()">×</button></h3>
+    <div class="field" style="margin-bottom:12px"><label>Role title</label><input type="text" id="ar-name" placeholder="DevOps Engineer"></div>
+    <div class="fg fg2">
+      <div class="field"><label>Min CTC / month (₹)</label><input type="number" id="ar-min" value="60000" step="5000"></div>
+      <div class="field"><label>Max CTC / month (₹)</label><input type="number" id="ar-max" value="80000" step="5000"></div>
+    </div>
+    <div class="fg fg2">
+      <div class="field"><label>Billable % (0.60–0.90)</label><input type="number" id="ar-bill" value="0.80" step="0.05" min="0.1" max="1"></div>
+      <div class="field"><label>Overhead multiplier (1.20–1.50)</label><input type="number" id="ar-over" value="1.30" step="0.05" min="1"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btns" onclick="closeModal()">Cancel</button>
+      <button class="btn btnp" onclick="addRole()">Add role</button>
+    </div>`);
+}
+function addRole(){
+  const name=document.getElementById('ar-name').value.trim();
+  if(!name){alert('Role name required');return}
+  M.RATE_CARD[name]={
+    minCTC:parseInt(document.getElementById('ar-min').value)||60000,
+    maxCTC:parseInt(document.getElementById('ar-max').value)||80000,
+    billable:parseFloat(document.getElementById('ar-bill').value)||0.80,
+    overhead:parseFloat(document.getElementById('ar-over').value)||1.30,
+  };
+  saveMasters(); closeModal(); renderAdmin();
+  addLog(`Role added: ${name}`, 'edit');
+}
+function editRole(role){
+  const c=M.RATE_CARD[role];
+  showModal(`
+    <h3>Edit role: ${esc(role)} <button class="modal-close" onclick="closeModal()">×</button></h3>
+    <div class="fg fg2">
+      <div class="field"><label>Min CTC / month (₹)</label><input type="number" id="er-min" value="${c.minCTC}" step="5000"></div>
+      <div class="field"><label>Max CTC / month (₹)</label><input type="number" id="er-max" value="${c.maxCTC}" step="5000"></div>
+    </div>
+    <div class="fg fg2">
+      <div class="field"><label>Billable %</label><input type="number" id="er-bill" value="${c.billable}" step="0.05" min="0.1" max="1"></div>
+      <div class="field"><label>Overhead multiplier</label><input type="number" id="er-over" value="${c.overhead}" step="0.05" min="1"></div>
+    </div>
+    <div style="background:var(--gl);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--gdp);margin-top:8px">
+      Derived hourly rate: <strong>${fmtINR(hrly(role,false))}–${fmtINR(hrly(role,true))}/hr</strong> (recalculates on save)
+    </div>
+    <div class="modal-footer">
+      <button class="btn btns" onclick="closeModal()">Cancel</button>
+      <button class="btn btnd btnsm" onclick="deleteRole('${role}')">Delete role</button>
+      <button class="btn btnp" onclick="saveRole('${role}')">Save</button>
+    </div>`);
+}
+function saveRole(role){
+  M.RATE_CARD[role]={
+    minCTC:parseInt(document.getElementById('er-min').value)||M.RATE_CARD[role].minCTC,
+    maxCTC:parseInt(document.getElementById('er-max').value)||M.RATE_CARD[role].maxCTC,
+    billable:parseFloat(document.getElementById('er-bill').value)||M.RATE_CARD[role].billable,
+    overhead:parseFloat(document.getElementById('er-over').value)||M.RATE_CARD[role].overhead,
+  };
+  saveMasters(); closeModal(); renderAdmin();
+  addLog(`Rate updated: ${role}`, 'edit');
+}
+function deleteRole(role){
+  if(!confirm(`Delete role "${role}"? This will also remove it from module effort maps.`)) return;
+  delete M.RATE_CARD[role];
+  Object.values(M.MODULE_EFFORT).forEach(e=>{ delete e.r[role]; });
+  saveMasters(); closeModal(); renderAdmin();
+  addLog(`Role deleted: ${role}`, 'warn');
+}
+
+/* ── CTC & RATES ADMIN ── */
+function renderAdminRates(){
+  return `
+  <div class="ph-admin"><div><h2>CTC & Rates</h2><p>Bulk-edit all CTC bands, billable percentages and overhead multipliers.</p></div></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2)">
+      Changes auto-calculate hourly rates. Affects all future proposal cost estimates.
+    </div>
+    <table class="admin-tbl">
+      <thead><tr><th>Role</th><th>Min CTC</th><th>Max CTC</th><th>Billable %</th><th>Overhead ×</th><th>→ Min hr</th><th>→ Max hr</th></tr></thead>
+      <tbody>
+        ${Object.entries(M.RATE_CARD).map(([role,c])=>`
+          <tr>
+            <td><strong>${role}</strong></td>
+            <td><input type="number" value="${c.minCTC}" step="5000" style="width:100%" onchange="M.RATE_CARD['${role}'].minCTC=+this.value;renderAdmin()"></td>
+            <td><input type="number" value="${c.maxCTC}" step="5000" style="width:100%" onchange="M.RATE_CARD['${role}'].maxCTC=+this.value;renderAdmin()"></td>
+            <td><input type="number" value="${c.billable}" step="0.05" min="0.1" max="1" style="width:70px" onchange="M.RATE_CARD['${role}'].billable=+this.value;renderAdmin()"></td>
+            <td><input type="number" value="${c.overhead}" step="0.05" min="1" style="width:70px" onchange="M.RATE_CARD['${role}'].overhead=+this.value;renderAdmin()"></td>
+            <td style="color:var(--bt);font-weight:600">${fmtINR(hrly(role,false))}</td>
+            <td style="color:var(--gd);font-weight:600">${fmtINR(hrly(role,true))}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:14px;display:flex;gap:8px">
+    <button class="btn btnp" onclick="saveMasters();alert('CTC rates saved!')">💾 Save all rates</button>
+    <button class="btn btns" onclick="renderAdmin()">↺ Recalculate</button>
+  </div>`;
+}
+
+/* ── AI FEED ── */
+let aiFeedLoading=false, aiFeedItems=JSON.parse(localStorage.getItem('erpion_feed')||'[]');
+function renderAdminAIFeed(){
+  return `
+  <div class="ph-admin">
+    <div><h2>AI Feed</h2><p>Live internet research on ERP market trends, competitor intel, and platform updates.</p></div>
+    <button class="btn btnp btnsm" onclick="runAIFeed()" ${aiFeedLoading?'disabled':''}>
+      ${aiFeedLoading?'<span class="spin" style="width:14px;height:14px;border-width:2px"></span> Fetching…':'🌐 Fetch latest insights'}</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Research topics <span class="badge bb">AI + web search</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="feedTopics">
+      ${['ERP market India 2025','ERPNext latest features','Odoo vs ERPNext comparison','ZOHO suite updates','AI in ERP implementation','SMB ERP adoption trends India'].map(t=>`
+        <span class="itag" onclick="runFeedTopic('${t}')" title="Click to research this topic">${t}</span>`).join('')}
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Custom research query</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="customFeedQ" placeholder="e.g. ERPNext 15 new features, Odoo 17 pricing India…">
+        <button class="btn btnp btnsm" onclick="runFeedTopic(document.getElementById('customFeedQ').value)">Search</button>
+      </div>
+    </div>
+  </div>
+  <div id="feedResults">
+    ${aiFeedItems.length===0
+      ?`<div style="text-align:center;padding:40px;color:var(--text2)">Click "Fetch latest insights" or a topic above to pull live ERP market intelligence.</div>`
+      :aiFeedItems.map((item,i)=>`
+        <div class="feed-card">
+          <div class="feed-title">${esc(item.title)}</div>
+          <div class="feed-meta">${item.date} · <span class="badge bb">${esc(item.topic)}</span></div>
+          <div class="feed-body">${esc(item.body)}</div>
+          <div class="feed-actions">
+            <button class="btn btno btnsm" onclick="applyFeedToPrompt(${i})">+ Add to proposals context</button>
+            <button class="btn btnd btnsm" onclick="removeFeedItem(${i})">Remove</button>
+          </div>
+        </div>`).join('')}
+  </div>`;
+}
+async function runAIFeed(){
+  if(!S.apiKey.trim()){alert('Add your Anthropic API key first (Step 1 of proposal builder)');return}
+  aiFeedLoading=true; renderAdmin();
+  await fetchFeedTopic('ERP market trends India SMB 2025');
+  await fetchFeedTopic('ERPNext Odoo ZOHO latest updates features');
+  aiFeedLoading=false; renderAdmin();
+}
+async function runFeedTopic(q){
+  if(!q||!q.trim()) return;
+  if(!S.apiKey.trim()){alert('Add your Anthropic API key first');return}
+  aiFeedLoading=true; renderAdmin();
+  await fetchFeedTopic(q);
+  aiFeedLoading=false; renderAdmin();
+}
+async function fetchFeedTopic(topic){
+  const prompt=`Search the web for: "${topic}". Provide a concise intelligence brief for an ERP implementation consultancy in India. Include key findings, relevant market data, and actionable insights. Keep it under 200 words.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':S.apiKey.trim(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:prompt}]})});
+    const d=await res.json();
+    const textBlock=d.content?.find(b=>b.type==='text');
+    if(textBlock?.text){
+      aiFeedItems.unshift({title:topic,topic,body:textBlock.text,date:new Date().toLocaleDateString('en-IN'),pinned:false});
+      if(aiFeedItems.length>20) aiFeedItems=aiFeedItems.slice(0,20);
+      localStorage.setItem('erpion_feed',JSON.stringify(aiFeedItems));
+      addLog(`AI feed fetched: ${topic}`, 'ai');
+    }
+  }catch(e){addLog('AI Feed error: '+e.message,'error')}
+}
+function removeFeedItem(i){aiFeedItems.splice(i,1);localStorage.setItem('erpion_feed',JSON.stringify(aiFeedItems));renderAdmin()}
+function applyFeedToPrompt(i){
+  const item=aiFeedItems[i];
+  alert(`Intelligence context added!\n\nThis insight will inform the next proposal you generate:\n\n"${item.body.substring(0,200)}…"\n\nIt is automatically referenced when AI writes the proposal.`);
+  addLog(`Feed item applied to context: ${item.title}`,'ai');
+}
+
+/* ── ACTIVITY LOG ── */
+function renderAdminLog(){
+  const typeColor={ai:'bb',edit:'bg',save:'bp',success:'bg',error:'br',warn:'ba'};
+  return `
+  <div class="ph-admin">
+    <div><h2>Activity log</h2><p>All actions, AI calls, and data changes recorded here.</p></div>
+    <button class="btn btnd btnsm" onclick="clearLog()">Clear log</button>
+  </div>
+  <div class="card">
+    ${activityLog.length===0
+      ?'<div style="color:var(--text2);font-size:13px;padding:8px 0">No activity yet.</div>'
+      :activityLog.map(l=>`
+        <div class="log-item">
+          <span class="log-time">${new Date(l.time).toLocaleTimeString('en-IN')}</span>
+          <span class="badge ${typeColor[l.type]||'bb'} log-badge">${l.type||'info'}</span>
+          <span class="log-msg">${esc(l.msg)}</span>
+        </div>`).join('')}
+  </div>`;
+}
+function clearLog(){if(confirm('Clear activity log?')){activityLog=[];localStorage.setItem('erpion_log','[]');renderAdmin()}}
+
+/* ═══════════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════════ */
+addLog('App started', 'info');
+render();
+updateApiBar();
+</script>
+</body>
+</html>
